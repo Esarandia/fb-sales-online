@@ -3,14 +3,17 @@ import gspread
 from google.oauth2.service_account import Credentials
 import os
 import json
+import base64
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
 SPREADSHEET_ID = "1rNAba2jqzBqzXZZxplfkXc5XthDbgVVvntDOIdDEx9w"
 
-# Read service account credentials from Streamlit secret
-creds_json = os.environ["GOOGLE_SERVICE_ACCOUNT"]
-creds_dict = json.loads(creds_json)
+# --- Decode base64 secret and authorize ---
+creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
+creds_bytes = base64.b64decode(creds_b64)
+creds_dict = json.loads(creds_bytes.decode("utf-8"))
+
 scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
