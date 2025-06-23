@@ -174,7 +174,7 @@ if st.session_state.get("success_msg"):
 if "cart" not in st.session_state:
     st.session_state["cart"] = []
 
-st.title("Sales Entry - Google Sheets")
+st.title("Facebuko Sales")
 
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
 
