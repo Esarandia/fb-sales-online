@@ -76,6 +76,10 @@ if st.session_state.get("success_msg"):
     st.success(st.session_state["success_msg"])
     st.session_state.pop("success_msg")
 
+# Initialize cart in session state
+if "cart" not in st.session_state:
+    st.session_state["cart"] = []
+
 st.title("Sales Entry - Google Sheets")
 
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
@@ -84,33 +88,58 @@ if product != "Pizza":
     packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
     size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
     price = price_map[packaging][size]
+    pizza_type = None
 else:
     packaging = "Box"
     pizza_type = st.selectbox(
         "Select Pizza Flavor",
         ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
     )
-
-    # Pricing logic
     if pizza_type == "Supreme":
         size = "Supreme"
     else:
-        size = pizza_type  # Use the pizza_type directly for cell_map
+        size = pizza_type
     price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
 
 qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
 amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
-if st.button("Submit"):
-    try:
-        target_cell = cell_map[product][packaging][size]
-        current_value = sheet.acell(target_cell).value
-        current_value = int(current_value) if current_value and current_value.isdigit() else 0
-        new_value = current_value + qty
-        sheet.update_acell(target_cell, new_value)
-        st.session_state["success_msg"] = f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})"
-        st.session_state["reset_qty"] = True
-        st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
+if st.button("Add to Order"):
+    # Add current item to cart
+    item = {
+        "product": product,
+        "packaging": packaging,
+        "size": size,
+        "qty": qty,
+        "pizza_type": pizza_type
+    }
+    st.session_state["cart"].append(item)
+    st.session_state["reset_qty"] = True
+    st.rerun()
+
+# Display cart
+if st.session_state["cart"]:
+    st.subheader("Current Order")
+    for idx, item in enumerate(st.session_state["cart"], 1):
+        if item["product"] == "Pizza":
+            desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
+        else:
+            desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
+        st.write(f"{idx}. {desc}")
+    if st.button("Submit Order"):
+        try:
+            for item in st.session_state["cart"]:
+                if item["product"] == "Pizza":
+                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                else:
+                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                current_value = sheet.acell(target_cell).value
+                current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+                new_value = current_value + item["qty"]
+                sheet.update_acell(target_cell, new_value)
+            st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
+            st.session_state["cart"] = []
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error: {e}")
