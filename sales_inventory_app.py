@@ -33,8 +33,14 @@ now = datetime.now()
 today_str = now.strftime("%Y-%m-%d")
 # Get all sales for today
 sales_records = sales_log.get_all_records()
+def parse_amount(row):
+    amt = row.get("Amount", 0)
+    try:
+        return float(amt) if amt not in (None, "", " ") else 0.0
+    except Exception:
+        return 0.0
 total_sales_today = sum(
-    float(row["Amount"]) for row in sales_records if row.get("Date") == today_str
+    parse_amount(row) for row in sales_records if row.get("Date") == today_str
 )
 
 # --- Cell Map Matching Excel Structure ---
