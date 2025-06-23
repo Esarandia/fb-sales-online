@@ -67,44 +67,48 @@ price_map = {
 # --- Streamlit App ---
 
 # --- Inventory Display ---
+@st.cache_data(show_spinner=False)
+def get_inventory(sheet):
+    inventory_data = []
+    # Buko Juice
+    for packaging in ["Cup", "Bottle"]:
+        for size in ["Small", "Medium", "Large"]:
+            cell = cell_map["Buko Juice"][packaging][size]
+            value = sheet.acell(cell).value
+            value = int(value) if value and str(value).isdigit() else 0
+            inventory_data.append({
+                "Product": "Buko Juice",
+                "Packaging/Flavor": packaging,
+                "Size": size,
+                "Quantity": value
+            })
+    # Buko Shake
+    for packaging in ["Cup", "Bottle"]:
+        for size in ["Small", "Medium", "Large"]:
+            cell = cell_map["Buko Shake"][packaging][size]
+            value = sheet.acell(cell).value
+            value = int(value) if value and str(value).isdigit() else 0
+            inventory_data.append({
+                "Product": "Buko Shake",
+                "Packaging/Flavor": packaging,
+                "Size": size,
+                "Quantity": value
+            })
+    # Pizza
+    for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]:
+        cell = cell_map["Pizza"]["Box"][flavor]
+        value = sheet.acell(cell).value
+        value = int(value) if value and str(value).isdigit() else 0
+        inventory_data.append({
+            "Product": "Pizza",
+            "Packaging/Flavor": flavor,
+            "Size": "Box",
+            "Quantity": value
+        })
+    return pd.DataFrame(inventory_data)
+
 st.subheader("Current Inventory")
-inventory_data = []
-# Buko Juice
-for packaging in ["Cup", "Bottle"]:
-    for size in ["Small", "Medium", "Large"]:
-        cell = cell_map["Buko Juice"][packaging][size]
-        value = sheet.acell(cell).value
-        value = int(value) if value and str(value).isdigit() else 0
-        inventory_data.append({
-            "Product": "Buko Juice",
-            "Packaging/Flavor": packaging,
-            "Size": size,
-            "Quantity": value
-        })
-# Buko Shake
-for packaging in ["Cup", "Bottle"]:
-    for size in ["Small", "Medium", "Large"]:
-        cell = cell_map["Buko Shake"][packaging][size]
-        value = sheet.acell(cell).value
-        value = int(value) if value and str(value).isdigit() else 0
-        inventory_data.append({
-            "Product": "Buko Shake",
-            "Packaging/Flavor": packaging,
-            "Size": size,
-            "Quantity": value
-        })
-# Pizza
-for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]:
-    cell = cell_map["Pizza"]["Box"][flavor]
-    value = sheet.acell(cell).value
-    value = int(value) if value and str(value).isdigit() else 0
-    inventory_data.append({
-        "Product": "Pizza",
-        "Packaging/Flavor": flavor,
-        "Size": "Box",
-        "Quantity": value
-    })
-st.dataframe(pd.DataFrame(inventory_data))
+st.dataframe(get_inventory(sheet))
 
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
