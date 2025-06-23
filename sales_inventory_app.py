@@ -203,6 +203,13 @@ if st.session_state["cart"]:
         if cash_received < order_total:
             st.error(f"Insufficient cash! Received ₱{cash_received}, need ₱{order_total}.")
         else:
+            st.session_state["last_change"] = cash_received - order_total
+            st.session_state["show_change"] = True
+            st.session_state["success_msg"] = f"Order ready to complete! {len(st.session_state['cart'])} items."
+    # Show change and Complete Order button if needed
+    if st.session_state["show_change"]:
+        st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
+        if st.button("Complete Order", key="ok_btn"):
             try:
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
@@ -213,22 +220,14 @@ if st.session_state["cart"]:
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
-                st.session_state["last_change"] = cash_received - order_total
-                st.session_state["show_change"] = True
-                st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
+                st.session_state["cart"] = []
+                st.session_state["show_change"] = False
+                st.session_state["last_change"] = 0
+                st.session_state.pop("success_msg", None)
+                st.cache_data.clear()
+                st.rerun()
             except Exception as e:
                 st.error(f"Error: {e}")
-    # Show change and OK button if needed
-    if st.session_state["show_change"]:
-        st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
-        if st.button("OK", key="ok_btn"):
-            st.session_state["cart"] = []
-            st.session_state["show_change"] = False
-            st.session_state["last_change"] = 0
-            # Do NOT reset st.session_state["cash_received"] here to avoid StreamlitAPIException
-            st.session_state.pop("success_msg", None)
-            st.cache_data.clear()
-            st.rerun()
     st.markdown('---')
 
 # --- Current Inventory Section ---
