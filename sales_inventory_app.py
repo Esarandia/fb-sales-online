@@ -48,7 +48,10 @@ cell_map = {
     "Pizza": {
         "Box": {
             "Supreme": "O6",
-            "Others": "P6"
+            "Hawaiian": "P6",
+            "Pepperoni": "Q6",
+            "Ham & Cheese": "R6",
+            "Shawarma": "S6"
         }
     }
 }
@@ -80,8 +83,8 @@ else:
     if pizza_type == "Supreme":
         size = "Supreme"
     else:
-        size = "Others"
-    price = price_map[packaging][size]
+        size = pizza_type  # Use the pizza_type directly for cell_map
+    price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
 
 qty = st.number_input("Enter Quantity", min_value=1, step=1)
 amount = qty * price
