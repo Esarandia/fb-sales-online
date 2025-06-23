@@ -86,11 +86,14 @@ else:
         size = pizza_type  # Use the pizza_type directly for cell_map
     price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
 
+def reset_qty():
+    st.session_state["qty"] = 1
+
 qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
 amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
-if st.button("Submit"):
+if st.button("Submit", on_click=reset_qty):
     try:
         target_cell = cell_map[product][packaging][size]
         current_value = sheet.acell(target_cell).value
@@ -100,7 +103,5 @@ if st.button("Submit"):
         sheet.update_acell(target_cell, new_value)
 
         st.success(f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})")
-        st.session_state["qty"] = 1
-        st.experimental_rerun()
     except Exception as e:
         st.error(f"Error: {e}")
