@@ -5,6 +5,7 @@ import os
 import json
 import base64
 import pandas as pd
+from streamlit_extras.add_vertical_space import add_vertical_space
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
@@ -151,7 +152,8 @@ qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
 amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
-if st.button("Add to Order"):
+# Make Add to Order button green
+if st.button("Add to Order", type="primary"):
     # Add current item to cart
     item = {
         "product": product,
@@ -182,13 +184,15 @@ if st.session_state["cart"]:
         cols = st.columns([6, 2, 1])
         cols[0].write(f"{idx}. {desc}")
         cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
-        if cols[2].button("Remove", key=f"remove_{idx}"):
+        # Use an x icon for remove
+        if cols[2].button("❌", key=f"remove_{idx}"):
             remove_idx = idx - 1
     st.markdown(f"**Total Order Price: ₱{order_total}**")
     if remove_idx is not None:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
-    if st.button("Submit Order"):
+    # Make Submit Order button green
+    if st.button("Submit Order", type="primary"):
         try:
             for item in st.session_state["cart"]:
                 if item["product"] == "Pizza":
