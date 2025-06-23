@@ -237,25 +237,20 @@ st.markdown("""
         border: none !important;
         font-weight: bold;
         box-shadow: none !important;
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        min-height: 32px !important;
-        max-width: 32px !important;
-        max-height: 32px !important;
+        width: 2.2em !important;
+        height: 2.2em !important;
         padding: 0 !important;
-        margin: auto !important;
+        border-radius: 6px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 20px !important;
-        border-radius: 6px !important;
+        margin: auto !important;
     }
     /* Center the X button in its column */
-    div.stButton {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
+    div[data-testid="column"] div.stButton {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     </style>
 """, unsafe_allow_html=True)
