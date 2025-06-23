@@ -111,33 +111,6 @@ def get_simple_inventory():
 
 # --- Streamlit App ---
 
-# Add custom CSS for section containers
-st.markdown("""
-    <style>
-    .fb-section {
-        border: 2px solid #21ba45;
-        border-radius: 12px;
-        padding: 1.5em 1em 1em 1em;
-        margin-bottom: 1.5em;
-        background: #f8fff8;
-    }
-    .order-section {
-        border: 2px solid #2185d0;
-        border-radius: 12px;
-        padding: 1.5em 1em 1em 1em;
-        margin-bottom: 1.5em;
-        background: #f7faff;
-    }
-    .inventory-section {
-        border: 2px solid #f2711c;
-        border-radius: 12px;
-        padding: 1.5em 1em 1em 1em;
-        margin-bottom: 1.5em;
-        background: #fffaf5;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
     st.session_state["qty"] = 1
@@ -154,88 +127,85 @@ if "cart" not in st.session_state:
     st.session_state["cart"] = []
 
 # --- Facebuko Sales Section ---
-with st.container():
-    st.markdown('<div class="fb-section">', unsafe_allow_html=True)
-    st.markdown("### 🛒 Facebuko Sales")
-    product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
-    if product != "Pizza":
-        packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
-        size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
-        price = price_map[packaging][size]
-        pizza_type = None
+st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
+st.markdown('---')
+product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
+if product != "Pizza":
+    packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
+    size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
+    price = price_map[packaging][size]
+    pizza_type = None
+else:
+    packaging = "Box"
+    pizza_type = st.selectbox(
+        "Select Pizza Flavor",
+        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
+    )
+    if pizza_type == "Supreme":
+        size = "Supreme"
     else:
-        packaging = "Box"
-        pizza_type = st.selectbox(
-            "Select Pizza Flavor",
-            ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
-        )
-        if pizza_type == "Supreme":
-            size = "Supreme"
-        else:
-            size = pizza_type
-        price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
-    qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
-    amount = qty * price
-    st.write(f"**Amount: ₱{amount}**")
-    add_to_order = st.button("Add to Order", key="add_to_order_btn")
-    st.markdown('</div>', unsafe_allow_html=True)
+        size = pizza_type
+    price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
+qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
+amount = qty * price
+st.write(f"**Amount: ₱{amount}**")
+add_to_order = st.button("Add to Order", key="add_to_order_btn")
+st.markdown('---')
 
 # --- Current Order Section ---
 if st.session_state["cart"]:
-    with st.container():
-        st.markdown('<div class="order-section">', unsafe_allow_html=True)
-        st.markdown("### 🧾 Current Order")
-        remove_idx = None
-        order_total = 0
-        for idx, item in enumerate(st.session_state["cart"], 1):
-            # Calculate price for each item
-            if item["product"] == "Pizza":
-                item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
-                desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
-            else:
-                item_price = price_map[item["packaging"]][item["size"]]
-                desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
-            item_total = item_price * item["qty"]
-            order_total += item_total
-            cols = st.columns([6, 2, 1])
-            cols[0].write(f"{idx}. {desc}")
-            cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
-            if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
-                remove_idx = idx - 1
-        st.markdown(f"**Total Order Price: ₱{order_total}**")
-        if remove_idx is not None:
-            st.session_state["cart"].pop(remove_idx)
+    st.markdown('<h2 style="color:#2185d0;">🧾 Current Order</h2>', unsafe_allow_html=True)
+    st.markdown('---')
+    remove_idx = None
+    order_total = 0
+    for idx, item in enumerate(st.session_state["cart"], 1):
+        # Calculate price for each item
+        if item["product"] == "Pizza":
+            item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
+            desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
+        else:
+            item_price = price_map[item["packaging"]][item["size"]]
+            desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
+        item_total = item_price * item["qty"]
+        order_total += item_total
+        cols = st.columns([6, 2, 1])
+        cols[0].write(f"{idx}. {desc}")
+        cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
+        if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
+            remove_idx = idx - 1
+    st.markdown(f"**Total Order Price: ₱{order_total}**")
+    if remove_idx is not None:
+        st.session_state["cart"].pop(remove_idx)
+        st.rerun()
+    submit_order = st.button("Submit Order", key="submit_order_btn")
+    if submit_order:
+        try:
+            for item in st.session_state["cart"]:
+                if item["product"] == "Pizza":
+                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                else:
+                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                current_value = sheet.acell(target_cell).value
+                current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+                new_value = current_value + item["qty"]
+                sheet.update_acell(target_cell, new_value)
+            st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
+            st.session_state["cart"] = []
+            st.cache_data.clear()
             st.rerun()
-        submit_order = st.button("Submit Order", key="submit_order_btn")
-        if submit_order:
-            try:
-                for item in st.session_state["cart"]:
-                    if item["product"] == "Pizza":
-                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                    else:
-                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                    current_value = sheet.acell(target_cell).value
-                    current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-                    new_value = current_value + item["qty"]
-                    sheet.update_acell(target_cell, new_value)
-                st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
-                st.session_state["cart"] = []
-                st.cache_data.clear()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
-        st.markdown('</div>', unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Error: {e}")
+    st.markdown('---')
 
 # --- Current Inventory Section ---
-with st.container():
-    st.markdown('<div class="inventory-section">', unsafe_allow_html=True)
-    st.markdown("### 📦 Current Inventory")
-    if st.button("Refresh Inventory"):
-        st.cache_data.clear()
-    df1, df2 = get_simple_inventory()
-    st.dataframe(df1, hide_index=True)
-    st.dataframe(df2, hide_index=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
+st.markdown('---')
+if st.button("Refresh Inventory"):
+    st.cache_data.clear()
+df1, df2 = get_simple_inventory()
+st.dataframe(df1, hide_index=True)
+st.dataframe(df2, hide_index=True)
+st.markdown('---')
 
 # --- Place this at the very end of the script ---
 # st.subheader("Current Inventory")
