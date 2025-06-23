@@ -220,18 +220,25 @@ df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
 
-# Add custom CSS for green and red buttons by button label
+# Add custom CSS for green and red buttons by unique button keys
 st.markdown("""
     <style>
-    /* Green for Add to Order and Submit Order */
-    div.stButton > button#add_to_order_btn, div.stButton > button#submit_order_btn {
+    /* Green for Add to Order */
+    button[data-testid="baseButton-add_to_order_btn"] {
+        background-color: #21ba45 !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    /* Green for Submit Order */
+    button[data-testid="baseButton-submit_order_btn"] {
         background-color: #21ba45 !important;
         color: white !important;
         border: none !important;
         box-shadow: none !important;
     }
     /* Red for X remove buttons */
-    div.stButton > button[title="Remove item from cart"] {
+    button[data-testid^="baseButton-remove_"] {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
