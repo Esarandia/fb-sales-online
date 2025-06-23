@@ -168,15 +168,23 @@ if st.button("Add to Order"):
 if st.session_state["cart"]:
     st.subheader("Current Order")
     remove_idx = None
+    order_total = 0
     for idx, item in enumerate(st.session_state["cart"], 1):
+        # Calculate price for each item
         if item["product"] == "Pizza":
+            item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
             desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
         else:
+            item_price = price_map[item["packaging"]][item["size"]]
             desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
-        cols = st.columns([6, 1])
+        item_total = item_price * item["qty"]
+        order_total += item_total
+        cols = st.columns([6, 2, 1])
         cols[0].write(f"{idx}. {desc}")
-        if cols[1].button("Remove", key=f"remove_{idx}"):
+        cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
+        if cols[2].button("Remove", key=f"remove_{idx}"):
             remove_idx = idx - 1
+    st.markdown(f"**Total Order Price: ₱{order_total}**")
     if remove_idx is not None:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
