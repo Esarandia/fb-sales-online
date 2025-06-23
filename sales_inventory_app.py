@@ -66,27 +66,38 @@ price_map = {
 # --- Streamlit App ---
 st.title("Sales Entry - Google Sheets")
 
-product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
+# Set default values for session state
+if "product" not in st.session_state:
+    st.session_state["product"] = "Buko Juice"
+if "packaging" not in st.session_state:
+    st.session_state["packaging"] = "Cup"
+if "size" not in st.session_state:
+    st.session_state["size"] = "Small"
+if "pizza_type" not in st.session_state:
+    st.session_state["pizza_type"] = "Supreme"
+if "qty" not in st.session_state:
+    st.session_state["qty"] = 1
+
+product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"], key="product")
 
 if product != "Pizza":
-    packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
-    size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
+    packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"], key="packaging")
+    size = st.selectbox("Select Size", ["Small", "Medium", "Large"], key="size")
     price = price_map[packaging][size]
 else:
     packaging = "Box"
     pizza_type = st.selectbox(
         "Select Pizza Flavor",
-        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
+        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"],
+        key="pizza_type"
     )
-
-    # Pricing logic
     if pizza_type == "Supreme":
         size = "Supreme"
     else:
-        size = pizza_type  # Use the pizza_type directly for cell_map
+        size = pizza_type
     price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
 
-qty = st.number_input("Enter Quantity", min_value=1, step=1)
+qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
 amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
@@ -95,10 +106,14 @@ if st.button("Submit"):
         target_cell = cell_map[product][packaging][size]
         current_value = sheet.acell(target_cell).value
         current_value = int(current_value) if current_value and current_value.isdigit() else 0
-
         new_value = current_value + qty
         sheet.update_acell(target_cell, new_value)
-
         st.success(f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})")
+        # Reset fields after submit
+        st.session_state["qty"] = 1
+        st.session_state["product"] = "Buko Juice"
+        st.session_state["packaging"] = "Cup"
+        st.session_state["size"] = "Small"
+        st.session_state["pizza_type"] = "Supreme"
     except Exception as e:
         st.error(f"Error: {e}")
