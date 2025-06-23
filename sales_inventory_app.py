@@ -128,6 +128,11 @@ def get_simple_inventory():
 
 # --- Streamlit App ---
 
+# --- Total Sales of the Day (TOP SECTION) ---
+st.markdown('---')
+st.markdown(f"<h2 style='color:#21ba45;'>₱{total_sales_today:,.2f} <span style='font-size:22px;'>Total Sales Today</span></h2>", unsafe_allow_html=True)
+st.markdown('---')
+
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
     st.session_state["qty"] = 1
