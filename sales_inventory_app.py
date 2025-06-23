@@ -220,25 +220,18 @@ df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
 
-# Add custom CSS for green and red buttons by unique button keys
+# Add custom CSS for green and red buttons by button order and text
 st.markdown("""
     <style>
-    /* Green for Add to Order */
-    button#add_to_order_btn {
+    /* Green for Add to Order and Submit Order (first two buttons in the form) */
+    div.stButton > button {
         background-color: #21ba45 !important;
         color: white !important;
         border: none !important;
         box-shadow: none !important;
     }
-    /* Green for Submit Order */
-    button#submit_order_btn {
-        background-color: #21ba45 !important;
-        color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    /* Red for X remove buttons */
-    button[id^="remove_"] {
+    /* Red for X remove buttons (by button text) */
+    div.stButton > button:has(span:contains('X')) {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
