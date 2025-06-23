@@ -128,6 +128,8 @@ if st.session_state.get("success_msg"):
 if "cart" not in st.session_state:
     st.session_state["cart"] = []
 
+# --- Facebuko Sales Section ---
+st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
 # --- Total Sales (from Current Inventory Table) ---
 df1, df2 = get_simple_inventory()
 total_sales = 0
@@ -157,8 +159,6 @@ if (df1[['Small', 'Medium', 'Large']].sum().sum() + df2[['Supreme', 'Hawaiian', 
 st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
 st.markdown('---')
 
-# --- Facebuko Sales Section ---
-st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
 if product != "Pizza":
     packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
