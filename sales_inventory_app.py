@@ -198,6 +198,10 @@ if st.session_state["cart"]:
         except Exception as e:
             st.error(f"Error: {e}")
 
+# --- Place this at the very end of the script ---
+st.subheader("Current Inventory")
+if st.button("Refresh Inventory"):
+    st.cache_data.clear()
 df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
