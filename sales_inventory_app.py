@@ -411,42 +411,5 @@ st.markdown("""
         justify-content: center;
         align-items: center;
     }
-    /* Make main container narrower and add padding for mobile */
-    .main .block-container {
-        max-width: 480px !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-    }
-    /* Reduce font size for headers and text */
-    h2, h3, h4, h5, h6 {
-        font-size: 1.1em !important;
-    }
-    .stMarkdown, .stDataFrame, .stSelectbox, .stNumberInput, .stButton, .stTextInput {
-        font-size: 0.95em !important;
-    }
-    /* Make buttons and inputs more compact */
-    div.stButton > button, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {
-        min-height: 2.2em !important;
-        font-size: 1em !important;
-        padding: 0.3em 0.7em !important;
-    }
-    /* Reduce padding/margin for all widgets */
-    .stSelectbox, .stNumberInput, .stButton, .stTextInput {
-        margin-bottom: 0.5em !important;
-    }
-    /* Responsive tweaks for very small screens */
-    @media (max-width: 600px) {
-        .main .block-container {
-            max-width: 99vw !important;
-            padding-left: 0.2rem !important;
-            padding-right: 0.2rem !important;
-        }
-        h2, h3, h4, h5, h6 {
-            font-size: 1em !important;
-        }
-        .stMarkdown, .stDataFrame, .stSelectbox, .stNumberInput, .stButton, .stTextInput {
-            font-size: 0.9em !important;
-        }
-    }
     </style>
 """, unsafe_allow_html=True)
