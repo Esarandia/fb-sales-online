@@ -185,27 +185,37 @@ if st.session_state["cart"]:
         if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
             remove_idx = idx - 1
     st.markdown(f"**Total Order Price: ₱{order_total}**")
+    # Cash received input
+    cash_key = "cash_received"
+    if cash_key not in st.session_state:
+        st.session_state[cash_key] = 0
+    cash_received = st.number_input("Cash Received", min_value=0, step=1, key=cash_key)
     if remove_idx is not None:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
     submit_order = st.button("Submit Order", key="submit_order_btn")
     if submit_order:
-        try:
-            for item in st.session_state["cart"]:
-                if item["product"] == "Pizza":
-                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                else:
-                    target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                current_value = sheet.acell(target_cell).value
-                current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-                new_value = current_value + item["qty"]
-                sheet.update_acell(target_cell, new_value)
-            st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
-            st.session_state["cart"] = []
-            st.cache_data.clear()
-            st.rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
+        if cash_received < order_total:
+            st.error(f"Insufficient cash! Received ₱{cash_received}, need ₱{order_total}.")
+        else:
+            try:
+                for item in st.session_state["cart"]:
+                    if item["product"] == "Pizza":
+                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                    else:
+                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                    current_value = sheet.acell(target_cell).value
+                    current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+                    new_value = current_value + item["qty"]
+                    sheet.update_acell(target_cell, new_value)
+                change = cash_received - order_total
+                st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed. Change: ₱{change}"
+                st.session_state["cart"] = []
+                st.session_state[cash_key] = 0
+                st.cache_data.clear()
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error: {e}")
     st.markdown('---')
 
 # --- Current Inventory Section ---
