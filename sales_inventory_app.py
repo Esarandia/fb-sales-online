@@ -6,6 +6,7 @@ import json
 import base64
 import pandas as pd
 from datetime import datetime
+import pytz
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
@@ -111,7 +112,8 @@ def get_simple_inventory():
     return df1, df2
 
 # --- Total Sales of the Day (TOP SECTION) ---
-now = datetime.now()
+ph_tz = pytz.timezone("Asia/Manila")
+now = datetime.now(ph_tz)
 today_str = now.strftime("%Y-%m-%d")
 # Get all values from the sales log worksheet
 sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
@@ -243,7 +245,7 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
-                now = datetime.now()
+                now = datetime.now(ph_tz)
                 sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
