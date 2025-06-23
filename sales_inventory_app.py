@@ -171,7 +171,7 @@ if "last_change" not in st.session_state:
     st.session_state["last_change"] = 0
 
 # Use tabs for navigation
-facebuko_tab, inventory_tab = st.tabs(["Facebuko Sales", "Inventory & Remove Order"])
+facebuko_tab, inventory_tab, remove_tab = st.tabs(["Facebuko Sales", "Current Inventory", "Remove Order"])
 
 with facebuko_tab:
     st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
@@ -331,6 +331,7 @@ with inventory_tab:
     st.dataframe(df2, hide_index=True)
     st.markdown('---')
 
+with remove_tab:
     st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
     remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
     if remove_product != "Pizza":
