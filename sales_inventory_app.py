@@ -5,12 +5,10 @@ import os
 import json
 import base64
 import pandas as pd
-from datetime import datetime
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
 SPREADSHEET_ID = "1rNAba2jqzBqzXZZxplfkXc5XthDbgVVvntDOIdDEx9w"
-SALES_LOG_SHEET = "SalesLog"
 
 # --- Decode base64 secret and authorize ---
 creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
@@ -21,42 +19,6 @@ scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
-# Add or get sales log worksheet
-try:
-    sales_log = client.open_by_key(SPREADSHEET_ID).worksheet(SALES_LOG_SHEET)
-except Exception:
-    sales_log = client.open_by_key(SPREADSHEET_ID).add_worksheet(title=SALES_LOG_SHEET, rows=1000, cols=10)
-    sales_log.append_row(["Date", "Time", "Product", "Packaging", "Size/Flavor", "Qty", "Amount"])
-
-# --- Total Sales of the Day ---
-now = datetime.now()
-today_str = now.strftime("%Y-%m-%d")
-# Get all values from the sales log worksheet
-sales_values = sales_log.get_all_values()
-if sales_values:
-    header = sales_values[0]
-    try:
-        date_idx = header.index("Date")
-        amount_idx = header.index("Amount")
-    except ValueError:
-        date_idx = None
-        amount_idx = None
-    total_sales_today = 0.0
-    if date_idx is not None and amount_idx is not None:
-        for row in sales_values[1:]:
-            if len(row) > max(date_idx, amount_idx):
-                row_date = row[date_idx]
-                amt = row[amount_idx]
-                if row_date == today_str:
-                    if isinstance(amt, str):
-                        amt = amt.replace(",", "").strip()
-                    try:
-                        amt_val = float(amt) if amt not in (None, "", " ") else 0.0
-                    except Exception:
-                        amt_val = 0.0
-                    total_sales_today += amt_val
-else:
-    total_sales_today = 0.0
 
 # --- Cell Map Matching Excel Structure ---
 cell_map = {
@@ -148,11 +110,6 @@ def get_simple_inventory():
     return df1, df2
 
 # --- Streamlit App ---
-
-# --- Total Sales of the Day (TOP SECTION) ---
-st.markdown('---')
-st.markdown(f"<h2 style='color:#21ba45;'>₱{total_sales_today:,.2f} <span style='font-size:22px;'>Total Sales Today</span></h2>", unsafe_allow_html=True)
-st.markdown('---')
 
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
@@ -254,32 +211,15 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
-                now = datetime.now()
-                # Log all items before clearing the cart
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                        item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
-                        size_or_flavor = item["pizza_type"]
                     else:
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                        item_price = price_map[item["packaging"]][item["size"]]
-                        size_or_flavor = item["size"]
                     current_value = sheet.acell(target_cell).value
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
-                    # Log each item in the sales log
-                    sales_log.append_row([
-                        now.strftime("%Y-%m-%d"),
-                        now.strftime("%H:%M:%S"),
-                        item["product"],
-                        item["packaging"],
-                        size_or_flavor,
-                        item["qty"],
-                        item_price * item["qty"]
-                    ])
-                # Only clear the cart after all items are logged
                 st.session_state["cart"] = []
                 st.session_state["show_change"] = False
                 st.session_state["last_change"] = 0
@@ -298,6 +238,42 @@ if st.button("Refresh Inventory"):
 df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
+st.markdown('---')
+
+# --- Remove Order Section ---
+st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
+remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
+if remove_product != "Pizza":
+    remove_packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"], key="remove_packaging")
+    remove_size = st.selectbox("Select Size", ["Small", "Medium", "Large"], key="remove_size")
+    remove_pizza_type = None
+else:
+    remove_packaging = "Box"
+    remove_pizza_type = st.selectbox(
+        "Select Pizza Flavor to Remove",
+        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"],
+        key="remove_pizza_type"
+    )
+    if remove_pizza_type == "Supreme":
+        remove_size = "Supreme"
+    else:
+        remove_size = remove_pizza_type
+remove_qty = st.number_input("Enter Quantity to Remove", min_value=1, step=1, key="remove_qty")
+if st.button("Remove Order", key="remove_order_btn"):
+    try:
+        if remove_product == "Pizza":
+            target_cell = cell_map[remove_product][remove_packaging][remove_size]
+        else:
+            target_cell = cell_map[remove_product][remove_packaging][remove_size]
+        current_value = sheet.acell(target_cell).value
+        current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+        new_value = max(0, current_value - remove_qty)
+        sheet.update_acell(target_cell, new_value)
+        st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
+        st.cache_data.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Error: {e}")
 st.markdown('---')
 
 # --- Place this at the very end of the script ---
