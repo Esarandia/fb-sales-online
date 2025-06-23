@@ -300,42 +300,6 @@ st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
 st.markdown('---')
 
-# --- Remove Order Section ---
-st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
-remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
-if remove_product != "Pizza":
-    remove_packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"], key="remove_packaging")
-    remove_size = st.selectbox("Select Size", ["Small", "Medium", "Large"], key="remove_size")
-    remove_pizza_type = None
-else:
-    remove_packaging = "Box"
-    remove_pizza_type = st.selectbox(
-        "Select Pizza Flavor to Remove",
-        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"],
-        key="remove_pizza_type"
-    )
-    if remove_pizza_type == "Supreme":
-        remove_size = "Supreme"
-    else:
-        remove_size = remove_pizza_type
-remove_qty = st.number_input("Enter Quantity to Remove", min_value=1, step=1, key="remove_qty")
-if st.button("Remove Order", key="remove_order_btn"):
-    try:
-        if remove_product == "Pizza":
-            target_cell = cell_map[remove_product][remove_packaging][remove_size]
-        else:
-            target_cell = cell_map[remove_product][remove_packaging][remove_size]
-        current_value = sheet.acell(target_cell).value
-        current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-        new_value = max(0, current_value - remove_qty)
-        sheet.update_acell(target_cell, new_value)
-        st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
-        st.cache_data.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-st.markdown('---')
-
 # --- Place this at the very end of the script ---
 # st.subheader("Current Inventory")
 # if st.button("Refresh Inventory"):
