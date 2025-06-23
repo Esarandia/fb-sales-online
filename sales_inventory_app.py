@@ -192,6 +192,7 @@ if st.session_state["cart"]:
                 sheet.update_acell(target_cell, new_value)
             st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
             st.session_state["cart"] = []
+            st.cache_data.clear()
             st.rerun()
         except Exception as e:
             st.error(f"Error: {e}")
