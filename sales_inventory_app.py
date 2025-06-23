@@ -32,11 +32,24 @@ def get_daily_worksheets():
     # Inventory sheet
     if inventory_title not in sheet_titles:
         # Copy structure from original inventory sheet
-        spreadsheet.duplicate_sheet(
+        new_sheet = spreadsheet.duplicate_sheet(
             source_sheet_id=spreadsheet.worksheet(SHEET_NAME).id,
             insert_sheet_index=None,
             new_sheet_name=inventory_title
         )
+        # Set all inventory cells to 0
+        ws = spreadsheet.worksheet(inventory_title)
+        # Buko Juice
+        for packaging in ["Cup", "Bottle"]:
+            for size in ["Small", "Medium", "Large"]:
+                ws.update_acell(cell_map["Buko Juice"][packaging][size], 0)
+        # Buko Shake
+        for packaging in ["Cup", "Bottle"]:
+            for size in ["Small", "Medium", "Large"]:
+                ws.update_acell(cell_map["Buko Shake"][packaging][size], 0)
+        # Pizza
+        for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]:
+            ws.update_acell(cell_map["Pizza"]["Box"][flavor], 0)
     # SalesLog sheet
     if saleslog_title not in sheet_titles:
         # Copy structure from original sales log sheet
