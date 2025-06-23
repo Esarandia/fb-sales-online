@@ -111,37 +111,6 @@ def get_simple_inventory():
     df2 = pd.DataFrame([data[4]], columns=pizza_columns)
     return df1, df2
 
-# --- Total Sales of the Day (TOP SECTION) ---
-ph_tz = pytz.timezone("Asia/Manila")
-now = datetime.now(ph_tz)
-today_str = now.strftime("%Y-%m-%d")
-# Get all values from the sales log worksheet
-sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
-sales_values = sales_log.get_all_values()
-total_sales_today = 0.0
-if sales_values:
-    header = sales_values[0]
-    try:
-        date_idx = header.index("Date")
-        amount_idx = header.index("Amount")
-    except ValueError:
-        date_idx = None
-        amount_idx = None
-    if date_idx is not None and amount_idx is not None:
-        for row in sales_values[1:]:
-            if len(row) > max(date_idx, amount_idx):
-                row_date = row[date_idx]
-                amt = row[amount_idx]
-                if row_date == today_str:
-                    if isinstance(amt, str):
-                        amt = amt.replace(",", "").strip()
-                    try:
-                        amt_val = float(amt) if amt not in (None, "", " ") else 0.0
-                    except Exception:
-                        amt_val = 0.0
-                    total_sales_today += amt_val
-st.markdown('---')
-
 # --- Streamlit App ---
 
 # Handle qty reset before rendering widgets
@@ -159,10 +128,37 @@ if st.session_state.get("success_msg"):
 if "cart" not in st.session_state:
     st.session_state["cart"] = []
 
+# --- Total Sales (from Current Inventory Table) ---
+df1, df2 = get_simple_inventory()
+total_sales = 0
+# Buko Juice & Buko Shake
+for idx, row in df1.iterrows():
+    product = row['Product']
+    for size in ['Small', 'Medium', 'Large']:
+        qty = row[size]
+        if qty > 0:
+            if 'Cup' in product:
+                price = price_map['Cup'][size]
+            elif 'Bottle' in product:
+                price = price_map['Bottle'][size]
+            else:
+                continue
+            total_sales += qty * price
+# Pizza
+pizza_row = df2.iloc[0]
+for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
+    qty = pizza_row[flavor]
+    if qty > 0:
+        price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
+        total_sales += qty * price
+# If all inventory is zero, total_sales should be zero
+if (df1[['Small', 'Medium', 'Large']].sum().sum() + df2[['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']].sum().sum()) == 0:
+    total_sales = 0
+st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
+st.markdown('---')
+
 # --- Facebuko Sales Section ---
 st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
-st.markdown(f"<h2 style='color:#21ba45;'>₱{total_sales_today:,.2f} <span style='font-size:22px;'>Total Sales Today</span></h2>", unsafe_allow_html=True)
-st.markdown('---')
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
 if product != "Pizza":
     packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
@@ -245,8 +241,7 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
-                now = datetime.now(ph_tz)
-                sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
+                # Removed now-unused timezone logic (ph_tz)
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
@@ -260,16 +255,6 @@ if st.session_state["cart"]:
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
-                    # Log each item in the sales log
-                    sales_log.append_row([
-                        now.strftime("%Y-%m-%d"),
-                        now.strftime("%H:%M:%S"),
-                        item["product"],
-                        item["packaging"],
-                        size_or_flavor,
-                        item["qty"],
-                        item_price * item["qty"]
-                    ])
                 st.session_state["cart"] = []
                 st.session_state["show_change"] = False
                 st.session_state["last_change"] = 0
@@ -288,30 +273,6 @@ if st.button("Refresh Inventory"):
 df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
-st.markdown('---')
-
-# --- Total Inventory Value (from Current Inventory Table) ---
-df1, df2 = get_simple_inventory()
-total_inventory_value = 0
-# Buko Juice & Buko Shake
-for idx, row in df1.iterrows():
-    product = row['Product']
-    for size in ['Small', 'Medium', 'Large']:
-        qty = row[size]
-        if 'Cup' in product:
-            price = price_map['Cup'][size]
-        elif 'Bottle' in product:
-            price = price_map['Bottle'][size]
-        else:
-            continue
-        total_inventory_value += qty * price
-# Pizza
-pizza_row = df2.iloc[0]
-for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
-    qty = pizza_row[flavor]
-    price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
-    total_inventory_value += qty * price
-st.markdown(f"<h2 style='color:#2185d0;'>₱{total_inventory_value:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
 st.markdown('---')
 
 # --- Remove Order Section ---
@@ -348,32 +309,6 @@ if st.button("Remove Order", key="remove_order_btn"):
         st.rerun()
     except Exception as e:
         st.error(f"Error: {e}")
-st.markdown('---')
-
-# --- Total Sales (from Current Inventory Table) ---
-df1, df2 = get_simple_inventory()
-total_sales = 0
-# Buko Juice & Buko Shake
-for idx, row in df1.iterrows():
-    product = row['Product']
-    for size in ['Small', 'Medium', 'Large']:
-        qty = row[size]
-        if qty > 0:
-            if 'Cup' in product:
-                price = price_map['Cup'][size]
-            elif 'Bottle' in product:
-                price = price_map['Bottle'][size]
-            else:
-                continue
-            total_sales += qty * price
-# Pizza
-pizza_row = df2.iloc[0]
-for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
-    qty = pizza_row[flavor]
-    if qty > 0:
-        price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
-        total_sales += qty * price
-st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
 st.markdown('---')
 
 # --- Place this at the very end of the script ---
