@@ -236,55 +236,8 @@ st.markdown('---')
 if st.button("Refresh Inventory"):
     st.cache_data.clear()
 df1, df2 = get_simple_inventory()
-
-# Add subtract buttons for Buko Juice and Buko Shake
-for idx, row in df1.iterrows():
-    product = row['Product']
-    for size in ["Small", "Medium", "Large"]:
-        current_qty = row[size]
-        col1, col2, col3 = st.columns([3, 2, 2])
-        with col1:
-            st.write(f"{product} - {size}")
-        with col2:
-            st.write(f"Qty: {current_qty}")
-        with col3:
-            subtract_key = f"subtract_{product}_{size}"
-            subtract_qty = st.number_input(f"Qty to subtract", min_value=1, max_value=current_qty, value=1, key=f"input_{subtract_key}")
-            if st.button("Subtract", key=subtract_key):
-                try:
-                    # Find the correct cell
-                    prod_name, packaging = product.split(' - ')
-                    cell = cell_map[prod_name][packaging][size]
-                    new_value = max(0, current_qty - subtract_qty)
-                    sheet.update_acell(cell, new_value)
-                    st.success(f"Subtracted {subtract_qty} from {product} {size}.")
-                    st.cache_data.clear()
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-# Add subtract buttons for Pizza flavors
-pizza_row = df2.iloc[0]
-for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]:
-    current_qty = pizza_row[flavor]
-    col1, col2, col3 = st.columns([3, 2, 2])
-    with col1:
-        st.write(f"Pizza - {flavor}")
-    with col2:
-        st.write(f"Qty: {current_qty}")
-    with col3:
-        subtract_key = f"subtract_Pizza_{flavor}"
-        subtract_qty = st.number_input(f"Qty to subtract", min_value=1, max_value=current_qty, value=1, key=f"input_{subtract_key}")
-        if st.button("Subtract", key=subtract_key):
-            try:
-                cell = cell_map["Pizza"]["Box"][flavor]
-                new_value = max(0, current_qty - subtract_qty)
-                sheet.update_acell(cell, new_value)
-                st.success(f"Subtracted {subtract_qty} from Pizza {flavor}.")
-                st.cache_data.clear()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
+st.dataframe(df1, hide_index=True)
+st.dataframe(df2, hide_index=True)
 st.markdown('---')
 
 # --- Place this at the very end of the script ---
