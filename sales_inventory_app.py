@@ -71,7 +71,16 @@ if product != "Pizza":
     price = price_map[packaging][size]
 else:
     packaging = "Box"
-    size = st.selectbox("Select Pizza Type", ["Supreme", "Others"])
+    pizza_type = st.selectbox(
+        "Select Pizza Flavor",
+        ["Supreme", "Hawaiian (HAW)", "Pepperoni (PEP)", "Ham & Cheese (H&C)", "Shawarma (SHA)"]
+    )
+
+    # Pricing logic
+    if pizza_type == "Supreme":
+        size = "Supreme"
+    else:
+        size = "Others"
     price = price_map[packaging][size]
 
 qty = st.number_input("Enter Quantity", min_value=1, step=1)
