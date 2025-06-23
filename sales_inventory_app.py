@@ -241,7 +241,7 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
-                # Removed now-unused timezone logic (ph_tz)
+                sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
@@ -255,6 +255,17 @@ if st.session_state["cart"]:
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
+                    # Log each item in the sales log
+                    now = datetime.now()
+                    sales_log.append_row([
+                        now.strftime("%Y-%m-%d"),
+                        now.strftime("%H:%M:%S"),
+                        item["product"],
+                        item["packaging"],
+                        size_or_flavor,
+                        item["qty"],
+                        item_price * item["qty"]
+                    ])
                 st.session_state["cart"] = []
                 st.session_state["show_change"] = False
                 st.session_state["last_change"] = 0
