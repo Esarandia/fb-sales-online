@@ -224,9 +224,11 @@ st.dataframe(df2, hide_index=True)
 st.markdown("""
     <style>
     /* Green for Add to Order and Submit Order */
-    div.stButton > button:first-child {
+    div.stButton > button#add_to_order_btn, div.stButton > button#submit_order_btn {
         background-color: #21ba45 !important;
         color: white !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     /* Red for X remove buttons */
     div.stButton > button[title="Remove item from cart"] {
@@ -234,6 +236,7 @@ st.markdown("""
         color: white !important;
         border: none !important;
         font-weight: bold;
+        box-shadow: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
