@@ -69,6 +69,12 @@ price_map = {
 if st.session_state.get("reset_qty", False):
     st.session_state["qty"] = 1
     st.session_state.pop("reset_qty")
+    # Do NOT call st.rerun() here
+
+# Show success message if present
+if st.session_state.get("success_msg"):
+    st.success(st.session_state["success_msg"])
+    st.session_state.pop("success_msg")
 
 st.title("Sales Entry - Google Sheets")
 
@@ -103,7 +109,7 @@ if st.button("Submit"):
         current_value = int(current_value) if current_value and current_value.isdigit() else 0
         new_value = current_value + qty
         sheet.update_acell(target_cell, new_value)
-        st.success(f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})")
+        st.session_state["success_msg"] = f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})"
         st.session_state["reset_qty"] = True
         st.rerun()
     except Exception as e:
