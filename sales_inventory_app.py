@@ -76,7 +76,7 @@ else:
     packaging = "Box"
     pizza_type = st.selectbox(
         "Select Pizza Flavor",
-        ["Supreme", "Hawaiian (HAW)", "Pepperoni (PEP)", "Ham & Cheese (H&C)", "Shawarma (SHA)"]
+        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
     )
 
     # Pricing logic
