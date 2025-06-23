@@ -5,7 +5,6 @@ import os
 import json
 import base64
 import pandas as pd
-from streamlit_extras.add_vertical_space import add_vertical_space
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
