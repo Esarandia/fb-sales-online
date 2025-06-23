@@ -152,7 +152,7 @@ amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
 # Make Add to Order button green
-add_to_order = st.button("Add to Order", key="add_to_order_btn", help="Add item to order", use_container_width=True, type="secondary")
+add_to_order = st.button("Add to Order", key="add_to_order_btn")
 
 # Add current item to cart
 if add_to_order:
@@ -185,19 +185,15 @@ if st.session_state["cart"]:
         cols = st.columns([6, 2, 1])
         cols[0].write(f"{idx}. {desc}")
         cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
-        # Use a red X text button for remove
+        # Use a red X text button for remove (no extra HTML)
         if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
             remove_idx = idx - 1
-        cols[2].markdown(
-            f"<div class='remove-x-btn' style='display:inline-block;'><button disabled style='background-color: #db2828; color: white; border: none; font-weight: bold;'>X</button></div>",
-            unsafe_allow_html=True
-        )
     st.markdown(f"**Total Order Price: ₱{order_total}**")
     if remove_idx is not None:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
     # Make Submit Order button green
-    submit_order = st.button("Submit Order", key="submit_order_btn", help="Submit the entire order", use_container_width=True, type="secondary")
+    submit_order = st.button("Submit Order", key="submit_order_btn")
     if submit_order:
         try:
             for item in st.session_state["cart"]:
@@ -224,14 +220,14 @@ df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
 
-# Add custom CSS for green and red buttons
+# Add custom CSS for green and red buttons by button label
 st.markdown("""
     <style>
-    .add-order-btn button, .submit-order-btn button {
+    button[kind="secondary"]:has(span:contains('Add to Order')), button[kind="secondary"]:has(span:contains('Submit Order')) {
         background-color: #21ba45 !important;
         color: white !important;
     }
-    .remove-x-btn button {
+    button:has(span:contains('X')) {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
