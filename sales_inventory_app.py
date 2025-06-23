@@ -5,10 +5,12 @@ import os
 import json
 import base64
 import pandas as pd
+from datetime import datetime
 
 # --- Google Sheets Setup ---
 SHEET_NAME = "MighteeMart1"
 SPREADSHEET_ID = "1rNAba2jqzBqzXZZxplfkXc5XthDbgVVvntDOIdDEx9w"
+SALES_LOG_SHEET = "SalesLog"
 
 # --- Decode base64 secret and authorize ---
 creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
@@ -19,6 +21,21 @@ scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
+# Add or get sales log worksheet
+try:
+    sales_log = client.open_by_key(SPREADSHEET_ID).worksheet(SALES_LOG_SHEET)
+except Exception:
+    sales_log = client.open_by_key(SPREADSHEET_ID).add_worksheet(title=SALES_LOG_SHEET, rows=1000, cols=10)
+    sales_log.append_row(["Date", "Time", "Product", "Packaging", "Size/Flavor", "Qty", "Amount"])
+
+# --- Total Sales of the Day ---
+now = datetime.now()
+today_str = now.strftime("%Y-%m-%d")
+# Get all sales for today
+sales_records = sales_log.get_all_records()
+total_sales_today = sum(
+    float(row["Amount"]) for row in sales_records if row.get("Date") == today_str
+)
 
 # --- Cell Map Matching Excel Structure ---
 cell_map = {
@@ -220,6 +237,17 @@ if st.session_state["cart"]:
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
+                # Log the sale
+                now = datetime.now()
+                sales_log.append_row([
+                    now.strftime("%Y-%m-%d"),
+                    now.strftime("%H:%M:%S"),
+                    item["product"],
+                    item["packaging"],
+                    item["size"] if item["product"] != "Pizza" else item["pizza_type"],
+                    item["qty"],
+                    item_price
+                ])
                 st.session_state["cart"] = []
                 st.session_state["show_change"] = False
                 st.session_state["last_change"] = 0
