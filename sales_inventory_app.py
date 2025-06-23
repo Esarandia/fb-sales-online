@@ -150,6 +150,17 @@ qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
 amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 add_to_order = st.button("Add to Order", key="add_to_order_btn")
+if add_to_order:
+    item = {
+        "product": product,
+        "packaging": packaging,
+        "size": size,
+        "qty": qty,
+        "pizza_type": pizza_type
+    }
+    st.session_state["cart"].append(item)
+    st.session_state["reset_qty"] = True
+    st.rerun()
 st.markdown('---')
 
 # --- Current Order Section ---
