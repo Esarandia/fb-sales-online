@@ -350,6 +350,32 @@ if st.button("Remove Order", key="remove_order_btn"):
         st.error(f"Error: {e}")
 st.markdown('---')
 
+# --- Total Sales (from Current Inventory Table) ---
+df1, df2 = get_simple_inventory()
+total_sales = 0
+# Buko Juice & Buko Shake
+for idx, row in df1.iterrows():
+    product = row['Product']
+    for size in ['Small', 'Medium', 'Large']:
+        qty = row[size]
+        if qty > 0:
+            if 'Cup' in product:
+                price = price_map['Cup'][size]
+            elif 'Bottle' in product:
+                price = price_map['Bottle'][size]
+            else:
+                continue
+            total_sales += qty * price
+# Pizza
+pizza_row = df2.iloc[0]
+for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
+    qty = pizza_row[flavor]
+    if qty > 0:
+        price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
+        total_sales += qty * price
+st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
+st.markdown('---')
+
 # --- Place this at the very end of the script ---
 # st.subheader("Current Inventory")
 # if st.button("Refresh Inventory"):
