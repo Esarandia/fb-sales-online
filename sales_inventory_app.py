@@ -105,6 +105,6 @@ if st.button("Submit"):
         sheet.update_acell(target_cell, new_value)
         st.success(f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})")
         st.session_state["reset_qty"] = True
-        st.experimental_rerun()
+        st.rerun()
     except Exception as e:
         st.error(f"Error: {e}")
