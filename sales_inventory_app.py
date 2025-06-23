@@ -20,7 +20,38 @@ creds_dict = json.loads(creds_bytes.decode("utf-8"))
 scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
-sheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
+
+# --- Daily Sheet Automation ---
+def get_daily_worksheets():
+    today_str = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
+    inventory_title = f"MighteeMart1_{today_str}"
+    saleslog_title = f"SalesLog_{today_str}"
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    # Check if sheets exist
+    sheet_titles = [ws.title for ws in spreadsheet.worksheets()]
+    # Inventory sheet
+    if inventory_title not in sheet_titles:
+        # Copy structure from original inventory sheet
+        spreadsheet.duplicate_sheet(
+            source_sheet_id=spreadsheet.worksheet(SHEET_NAME).id,
+            insert_sheet_index=None,
+            new_sheet_name=inventory_title
+        )
+    # SalesLog sheet
+    if saleslog_title not in sheet_titles:
+        # Copy structure from original sales log sheet
+        spreadsheet.duplicate_sheet(
+            source_sheet_id=spreadsheet.worksheet("SalesLog").id,
+            insert_sheet_index=None,
+            new_sheet_name=saleslog_title
+        )
+    # Return worksheet objects
+    inventory_ws = spreadsheet.worksheet(inventory_title)
+    saleslog_ws = spreadsheet.worksheet(saleslog_title)
+    return inventory_ws, saleslog_ws
+
+# --- Daily Sheet Setup ---
+inventory_ws, saleslog_ws = get_daily_worksheets()
 
 # --- Cell Map Matching Excel Structure ---
 cell_map = {
@@ -71,25 +102,25 @@ price_map = {
 def get_simple_inventory():
     # Buko Juice
     buko_juice_cup = [
-        int(sheet.acell(cell_map["Buko Juice"]["Cup"][size]).value or 0)
+        int(inventory_ws.acell(cell_map["Buko Juice"]["Cup"][size]).value or 0)
         for size in ["Small", "Medium", "Large"]
     ]
     buko_juice_bottle = [
-        int(sheet.acell(cell_map["Buko Juice"]["Bottle"][size]).value or 0)
+        int(inventory_ws.acell(cell_map["Buko Juice"]["Bottle"][size]).value or 0)
         for size in ["Small", "Medium", "Large"]
     ]
     # Buko Shake
     buko_shake_cup = [
-        int(sheet.acell(cell_map["Buko Shake"]["Cup"][size]).value or 0)
+        int(inventory_ws.acell(cell_map["Buko Shake"]["Cup"][size]).value or 0)
         for size in ["Small", "Medium", "Large"]
     ]
     buko_shake_bottle = [
-        int(sheet.acell(cell_map["Buko Shake"]["Bottle"][size]).value or 0)
+        int(inventory_ws.acell(cell_map["Buko Shake"]["Bottle"][size]).value or 0)
         for size in ["Small", "Medium", "Large"]
     ]
     # Pizza
     pizza_flavors = [
-        int(sheet.acell(cell_map["Pizza"]["Box"][flavor]).value or 0)
+        int(inventory_ws.acell(cell_map["Pizza"]["Box"][flavor]).value or 0)
         for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
     ]
     data = [
@@ -241,7 +272,6 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
-                sales_log = client.open_by_key(SPREADSHEET_ID).worksheet("SalesLog")
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
@@ -251,14 +281,14 @@ if st.session_state["cart"]:
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
                         item_price = price_map[item["packaging"]][item["size"]]
                         size_or_flavor = item["size"]
-                    current_value = sheet.acell(target_cell).value
+                    current_value = inventory_ws.acell(target_cell).value
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
-                    sheet.update_acell(target_cell, new_value)
+                    inventory_ws.update_acell(target_cell, new_value)
                     # Log each item in the sales log
                     ph_tz = pytz.timezone("Asia/Manila")
                     now = datetime.now(ph_tz)
-                    sales_log.append_row([
+                    saleslog_ws.append_row([
                         now.strftime("%Y-%m-%d"),
                         now.strftime("%H:%M:%S"),
                         item["product"],
@@ -312,10 +342,10 @@ if st.button("Remove Order", key="remove_order_btn"):
             target_cell = cell_map[remove_product][remove_packaging][remove_size]
         else:
             target_cell = cell_map[remove_product][remove_packaging][remove_size]
-        current_value = sheet.acell(target_cell).value
+        current_value = inventory_ws.acell(target_cell).value
         current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
         new_value = max(0, current_value - remove_qty)
-        sheet.update_acell(target_cell, new_value)
+        inventory_ws.update_acell(target_cell, new_value)
         st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
         st.cache_data.clear()
         st.rerun()
