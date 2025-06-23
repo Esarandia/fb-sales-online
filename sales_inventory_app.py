@@ -224,21 +224,21 @@ st.dataframe(df2, hide_index=True)
 st.markdown("""
     <style>
     /* Green for Add to Order */
-    button[data-testid="baseButton-add_to_order_btn"] {
+    button#add_to_order_btn {
         background-color: #21ba45 !important;
         color: white !important;
         border: none !important;
         box-shadow: none !important;
     }
     /* Green for Submit Order */
-    button[data-testid="baseButton-submit_order_btn"] {
+    button#submit_order_btn {
         background-color: #21ba45 !important;
         color: white !important;
         border: none !important;
         box-shadow: none !important;
     }
     /* Red for X remove buttons */
-    button[data-testid^="baseButton-remove_"] {
+    button[id^="remove_"] {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
