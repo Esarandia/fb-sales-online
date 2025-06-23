@@ -225,7 +225,7 @@ if st.session_state["cart"]:
             st.session_state["cart"] = []
             st.session_state["show_change"] = False
             st.session_state["last_change"] = 0
-            st.session_state["cash_received"] = 0
+            # Do NOT reset st.session_state["cash_received"] here to avoid StreamlitAPIException
             st.session_state.pop("success_msg", None)
             st.cache_data.clear()
             st.rerun()
