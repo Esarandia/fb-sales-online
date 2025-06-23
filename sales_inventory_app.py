@@ -162,214 +162,201 @@ def get_simple_inventory():
 
 # --- Streamlit App ---
 
-# Handle qty reset before rendering widgets
-if st.session_state.get("reset_qty", False):
-    st.session_state["qty"] = 1
-    st.session_state.pop("reset_qty")
-    # Do NOT call st.rerun() here
+# Use tabs for navigation
+facebuko_tab, inventory_tab = st.tabs(["Facebuko Sales", "Inventory & Remove Order"])
 
-# Show success message if present
-if st.session_state.get("success_msg"):
-    st.success(st.session_state["success_msg"])
-    st.session_state.pop("success_msg")
-
-# Initialize cart in session state
-if "cart" not in st.session_state:
-    st.session_state["cart"] = []
-
-# --- Facebuko Sales Section ---
-st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
-# --- Total Sales (from Current Inventory Table) ---
-df1, df2 = get_simple_inventory()
-total_sales = 0
-# Buko Juice & Buko Shake
-for idx, row in df1.iterrows():
-    product = row['Product']
-    for size in ['Small', 'Medium', 'Large']:
-        qty = row[size]
-        if qty > 0:
-            if 'Cup' in product:
-                price = price_map['Cup'][size]
-            elif 'Bottle' in product:
-                price = price_map['Bottle'][size]
-            else:
-                continue
-            total_sales += qty * price
-# Pizza
-pizza_row = df2.iloc[0]
-for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
-    qty = pizza_row[flavor]
-    if qty > 0:
-        price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
-        total_sales += qty * price
-# If all inventory is zero, total_sales should be zero
-if (df1[['Small', 'Medium', 'Large']].sum().sum() + df2[['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']].sum().sum()) == 0:
+with facebuko_tab:
+    st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
+    # --- Total Sales (from Current Inventory Table) ---
+    df1, df2 = get_simple_inventory()
     total_sales = 0
-st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
-st.markdown('---')
-
-product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
-if product != "Pizza":
-    packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
-    size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
-    price = price_map[packaging][size]
-    pizza_type = None
-else:
-    packaging = "Box"
-    pizza_type = st.selectbox(
-        "Select Pizza Flavor",
-        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
-    )
-    if pizza_type == "Supreme":
-        size = "Supreme"
-    else:
-        size = pizza_type
-    price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
-qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
-amount = qty * price
-st.write(f"**Amount: ₱{amount}**")
-add_to_order = st.button("Add to Order", key="add_to_order_btn")
-if add_to_order:
-    item = {
-        "product": product,
-        "packaging": packaging,
-        "size": size,
-        "qty": qty,
-        "pizza_type": pizza_type
-    }
-    st.session_state["cart"].append(item)
-    st.session_state["reset_qty"] = True
-    st.rerun()
-st.markdown('---')
-
-# --- Current Order Section ---
-if st.session_state["cart"]:
-    st.markdown('<h2 style="color:#2185d0;">🧾 Current Order</h2>', unsafe_allow_html=True)
+    # Buko Juice & Buko Shake
+    for idx, row in df1.iterrows():
+        product = row['Product']
+        for size in ['Small', 'Medium', 'Large']:
+            qty = row[size]
+            if qty > 0:
+                if 'Cup' in product:
+                    price = price_map['Cup'][size]
+                elif 'Bottle' in product:
+                    price = price_map['Bottle'][size]
+                else:
+                    continue
+                total_sales += qty * price
+    # Pizza
+    pizza_row = df2.iloc[0]
+    for flavor in ['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']:
+        qty = pizza_row[flavor]
+        if qty > 0:
+            price = price_map['Box']['Supreme' if flavor == 'Supreme' else 'Others']
+            total_sales += qty * price
+    # If all inventory is zero, total_sales should be zero
+    if (df1[['Small', 'Medium', 'Large']].sum().sum() + df2[['Supreme', 'Hawaiian', 'Pepperoni', 'Ham & Cheese', 'Shawarma']].sum().sum()) == 0:
+        total_sales = 0
+    st.markdown(f"<h2 style='color:#2185d0;'>₱{total_sales:,.2f} <span style='font-size:22px;'>Total Sales</span></h2>", unsafe_allow_html=True)
     st.markdown('---')
-    remove_idx = None
-    order_total = 0
-    for idx, item in enumerate(st.session_state["cart"], 1):
-        # Calculate price for each item
-        if item["product"] == "Pizza":
-            item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
-            desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
+
+    product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
+    if product != "Pizza":
+        packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"])
+        size = st.selectbox("Select Size", ["Small", "Medium", "Large"])
+        price = price_map[packaging][size]
+        pizza_type = None
+    else:
+        packaging = "Box"
+        pizza_type = st.selectbox(
+            "Select Pizza Flavor",
+            ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
+        )
+        if pizza_type == "Supreme":
+            size = "Supreme"
         else:
-            item_price = price_map[item["packaging"]][item["size"]]
-            desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
-        item_total = item_price * item["qty"]
-        order_total += item_total
-        cols = st.columns([6, 2, 1])
-        cols[0].write(f"{idx}. {desc}")
-        cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
-        if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
-            remove_idx = idx - 1
-    st.markdown(f"**Total Order Price: ₱{order_total}**")
-    # Cash received input
-    cash_key = "cash_received"
-    if cash_key not in st.session_state:
-        st.session_state[cash_key] = 0
-    cash_received = st.number_input("Cash Received", min_value=0, step=1, key=cash_key)
-    if remove_idx is not None:
-        st.session_state["cart"].pop(remove_idx)
+            size = pizza_type
+        price = price_map[packaging]["Supreme" if pizza_type == "Supreme" else "Others"]
+    qty = st.number_input("Enter Quantity", min_value=1, step=1, key="qty")
+    amount = qty * price
+    st.write(f"**Amount: ₱{amount}**")
+    add_to_order = st.button("Add to Order", key="add_to_order_btn")
+    if add_to_order:
+        item = {
+            "product": product,
+            "packaging": packaging,
+            "size": size,
+            "qty": qty,
+            "pizza_type": pizza_type
+        }
+        st.session_state["cart"].append(item)
+        st.session_state["reset_qty"] = True
         st.rerun()
-    submit_order = st.button("Submit Order", key="submit_order_btn")
-    # State for showing change and waiting for OK
-    if "show_change" not in st.session_state:
-        st.session_state["show_change"] = False
-    if "last_change" not in st.session_state:
-        st.session_state["last_change"] = 0
-    if submit_order and not st.session_state["show_change"]:
-        if cash_received < order_total:
-            st.error(f"Insufficient cash! Received ₱{cash_received}, need ₱{order_total}.")
-        else:
-            st.session_state["last_change"] = cash_received - order_total
-            st.session_state["show_change"] = True
-            st.session_state["success_msg"] = f"Order ready to complete! {len(st.session_state['cart'])} items."
-    # Show change and Complete Order button if needed
-    if st.session_state["show_change"]:
-        st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
-        if st.button("Complete Order", key="ok_btn"):
-            try:
-                for item in st.session_state["cart"]:
-                    if item["product"] == "Pizza":
-                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                        item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
-                        size_or_flavor = item["pizza_type"]
-                    else:
-                        target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
-                        item_price = price_map[item["packaging"]][item["size"]]
-                        size_or_flavor = item["size"]
-                    current_value = inventory_ws.acell(target_cell).value
-                    current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-                    new_value = current_value + item["qty"]
-                    inventory_ws.update_acell(target_cell, new_value)
-                    # Log each item in the sales log
-                    ph_tz = pytz.timezone("Asia/Manila")
-                    now = datetime.now(ph_tz)
-                    saleslog_ws.append_row([
-                        now.strftime("%Y-%m-%d"),
-                        now.strftime("%H:%M:%S"),
-                        item["product"],
-                        item["packaging"],
-                        size_or_flavor,
-                        item["qty"],
-                        item_price * item["qty"]
-                    ])
-                st.session_state["cart"] = []
-                st.session_state["show_change"] = False
-                st.session_state["last_change"] = 0
-                st.session_state.pop("success_msg", None)
-                st.cache_data.clear()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
     st.markdown('---')
 
-# --- Current Inventory Section ---
-st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
-st.markdown('---')
-if st.button("Refresh Inventory"):
-    st.cache_data.clear()
-df1, df2 = get_simple_inventory()
-st.dataframe(df1, hide_index=True)
-st.dataframe(df2, hide_index=True)
-st.markdown('---')
+    # --- Current Order Section ---
+    if st.session_state["cart"]:
+        st.markdown('<h2 style="color:#2185d0;">🧾 Current Order</h2>', unsafe_allow_html=True)
+        st.markdown('---')
+        remove_idx = None
+        order_total = 0
+        for idx, item in enumerate(st.session_state["cart"], 1):
+            # Calculate price for each item
+            if item["product"] == "Pizza":
+                item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
+                desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
+            else:
+                item_price = price_map[item["packaging"]][item["size"]]
+                desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
+            item_total = item_price * item["qty"]
+            order_total += item_total
+            cols = st.columns([6, 2, 1])
+            cols[0].write(f"{idx}. {desc}")
+            cols[1].write(f"₱{item_price} x {item['qty']} = ₱{item_total}")
+            if cols[2].button("X", key=f"remove_{idx}", help="Remove item from cart"):
+                remove_idx = idx - 1
+        st.markdown(f"**Total Order Price: ₱{order_total}**")
+        # Cash received input
+        cash_key = "cash_received"
+        if cash_key not in st.session_state:
+            st.session_state[cash_key] = 0
+        cash_received = st.number_input("Cash Received", min_value=0, step=1, key=cash_key)
+        if remove_idx is not None:
+            st.session_state["cart"].pop(remove_idx)
+            st.rerun()
+        submit_order = st.button("Submit Order", key="submit_order_btn")
+        # State for showing change and waiting for OK
+        if "show_change" not in st.session_state:
+            st.session_state["show_change"] = False
+        if "last_change" not in st.session_state:
+            st.session_state["last_change"] = 0
+        if submit_order and not st.session_state["show_change"]:
+            if cash_received < order_total:
+                st.error(f"Insufficient cash! Received ₱{cash_received}, need ₱{order_total}.")
+            else:
+                st.session_state["last_change"] = cash_received - order_total
+                st.session_state["show_change"] = True
+                st.session_state["success_msg"] = f"Order ready to complete! {len(st.session_state['cart'])} items."
+        # Show change and Complete Order button if needed
+        if st.session_state["show_change"]:
+            st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
+            if st.button("Complete Order", key="ok_btn"):
+                try:
+                    for item in st.session_state["cart"]:
+                        if item["product"] == "Pizza":
+                            target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                            item_price = price_map[item["packaging"]]["Supreme" if item["size"] == "Supreme" else "Others"]
+                            size_or_flavor = item["pizza_type"]
+                        else:
+                            target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
+                            item_price = price_map[item["packaging"]][item["size"]]
+                            size_or_flavor = item["size"]
+                        current_value = inventory_ws.acell(target_cell).value
+                        current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+                        new_value = current_value + item["qty"]
+                        inventory_ws.update_acell(target_cell, new_value)
+                        # Log each item in the sales log
+                        ph_tz = pytz.timezone("Asia/Manila")
+                        now = datetime.now(ph_tz)
+                        saleslog_ws.append_row([
+                            now.strftime("%Y-%m-%d"),
+                            now.strftime("%H:%M:%S"),
+                            item["product"],
+                            item["packaging"],
+                            size_or_flavor,
+                            item["qty"],
+                            item_price * item["qty"]
+                        ])
+                    st.session_state["cart"] = []
+                    st.session_state["show_change"] = False
+                    st.session_state["last_change"] = 0
+                    st.session_state.pop("success_msg", None)
+                    st.cache_data.clear()
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        st.markdown('---')
 
-# --- Remove Order Section ---
-st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
-remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
-if remove_product != "Pizza":
-    remove_packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"], key="remove_packaging")
-    remove_size = st.selectbox("Select Size", ["Small", "Medium", "Large"], key="remove_size")
-    remove_pizza_type = None
-else:
-    remove_packaging = "Box"
-    remove_pizza_type = st.selectbox(
-        "Select Pizza Flavor to Remove",
-        ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"],
-        key="remove_pizza_type"
-    )
-    if remove_pizza_type == "Supreme":
-        remove_size = "Supreme"
-    else:
-        remove_size = remove_pizza_type
-remove_qty = st.number_input("Enter Quantity to Remove", min_value=1, step=1, key="remove_qty")
-if st.button("Remove Order", key="remove_order_btn"):
-    try:
-        if remove_product == "Pizza":
-            target_cell = cell_map[remove_product][remove_packaging][remove_size]
-        else:
-            target_cell = cell_map[remove_product][remove_packaging][remove_size]
-        current_value = inventory_ws.acell(target_cell).value
-        current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-        new_value = max(0, current_value - remove_qty)
-        inventory_ws.update_acell(target_cell, new_value)
-        st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
+with inventory_tab:
+    st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
+    st.markdown('---')
+    if st.button("Refresh Inventory"):
         st.cache_data.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-st.markdown('---')
+    df1, df2 = get_simple_inventory()
+    st.dataframe(df1, hide_index=True)
+    st.dataframe(df2, hide_index=True)
+    st.markdown('---')
+
+    st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
+    remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
+    if remove_product != "Pizza":
+        remove_packaging = st.selectbox("Select Packaging", ["Cup", "Bottle"], key="remove_packaging")
+        remove_size = st.selectbox("Select Size", ["Small", "Medium", "Large"], key="remove_size")
+        remove_pizza_type = None
+    else:
+        remove_packaging = "Box"
+        remove_pizza_type = st.selectbox(
+            "Select Pizza Flavor to Remove",
+            ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"],
+            key="remove_pizza_type"
+        )
+        if remove_pizza_type == "Supreme":
+            remove_size = "Supreme"
+        else:
+            remove_size = remove_pizza_type
+    remove_qty = st.number_input("Enter Quantity to Remove", min_value=1, step=1, key="remove_qty")
+    if st.button("Remove Order", key="remove_order_btn"):
+        try:
+            if remove_product == "Pizza":
+                target_cell = cell_map[remove_product][remove_packaging][remove_size]
+            else:
+                target_cell = cell_map[remove_product][remove_packaging][remove_size]
+            current_value = inventory_ws.acell(target_cell).value
+            current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+            new_value = max(0, current_value - remove_qty)
+            inventory_ws.update_acell(target_cell, new_value)
+            st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
+            st.cache_data.clear()
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error: {e}")
+    st.markdown('---')
 
 # --- Place this at the very end of the script ---
 # st.subheader("Current Inventory")
