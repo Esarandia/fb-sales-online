@@ -108,6 +108,7 @@ def get_inventory():
     return pd.DataFrame(inventory_data)
 
 # --- Simplified Inventory Display ---
+@st.cache_data(show_spinner=False)
 def get_simple_inventory():
     # Buko Juice
     buko_juice_cup = [
@@ -152,6 +153,8 @@ def get_simple_inventory():
     return df1, df2
 
 st.subheader("Current Inventory")
+if st.button("Refresh Inventory"):
+    st.cache_data.clear()
 df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
