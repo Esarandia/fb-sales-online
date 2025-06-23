@@ -107,8 +107,54 @@ def get_inventory():
         })
     return pd.DataFrame(inventory_data)
 
+# --- Simplified Inventory Display ---
+def get_simple_inventory():
+    # Buko Juice
+    buko_juice_cup = [
+        int(sheet.acell(cell_map["Buko Juice"]["Cup"][size]).value or 0)
+        for size in ["Small", "Medium", "Large"]
+    ]
+    buko_juice_bottle = [
+        int(sheet.acell(cell_map["Buko Juice"]["Bottle"][size]).value or 0)
+        for size in ["Small", "Medium", "Large"]
+    ]
+    # Buko Shake
+    buko_shake_cup = [
+        int(sheet.acell(cell_map["Buko Shake"]["Cup"][size]).value or 0)
+        for size in ["Small", "Medium", "Large"]
+    ]
+    buko_shake_bottle = [
+        int(sheet.acell(cell_map["Buko Shake"]["Bottle"][size]).value or 0)
+        for size in ["Small", "Medium", "Large"]
+    ]
+    # Pizza
+    pizza_flavors = [
+        int(sheet.acell(cell_map["Pizza"]["Box"][flavor]).value or 0)
+        for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]
+    ]
+    data = [
+        ["Buko Juice - Cup"] + buko_juice_cup,
+        ["Buko Juice - Bottle"] + buko_juice_bottle,
+        ["Buko Shake - Cup"] + buko_shake_cup,
+        ["Buko Shake - Bottle"] + buko_shake_bottle,
+        ["Pizza"] + pizza_flavors
+    ]
+    columns = [
+        "Product",
+        "Small", "Medium", "Large"
+    ]
+    pizza_columns = [
+        "Product",
+        "Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"
+    ]
+    df1 = pd.DataFrame(data[:4], columns=columns)
+    df2 = pd.DataFrame([data[4]], columns=pizza_columns)
+    return df1, df2
+
 st.subheader("Current Inventory")
-st.dataframe(get_inventory())
+df1, df2 = get_simple_inventory()
+st.dataframe(df1, hide_index=True)
+st.dataframe(df2, hide_index=True)
 
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
