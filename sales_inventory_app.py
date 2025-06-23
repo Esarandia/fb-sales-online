@@ -256,7 +256,8 @@ if st.session_state["cart"]:
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
                     # Log each item in the sales log
-                    now = datetime.now()
+                    ph_tz = pytz.timezone("Asia/Manila")
+                    now = datetime.now(ph_tz)
                     sales_log.append_row([
                         now.strftime("%Y-%m-%d"),
                         now.strftime("%H:%M:%S"),
