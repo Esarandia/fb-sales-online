@@ -194,7 +194,12 @@ if st.session_state["cart"]:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
     submit_order = st.button("Submit Order", key="submit_order_btn")
-    if submit_order:
+    # State for showing change and waiting for OK
+    if "show_change" not in st.session_state:
+        st.session_state["show_change"] = False
+    if "last_change" not in st.session_state:
+        st.session_state["last_change"] = 0
+    if submit_order and not st.session_state["show_change"]:
         if cash_received < order_total:
             st.error(f"Insufficient cash! Received ₱{cash_received}, need ₱{order_total}.")
         else:
@@ -208,13 +213,22 @@ if st.session_state["cart"]:
                     current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
-                change = cash_received - order_total
-                st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed. Change: ₱{change}"
-                st.session_state["cart"] = []
-                st.cache_data.clear()
-                st.rerun()
+                st.session_state["last_change"] = cash_received - order_total
+                st.session_state["show_change"] = True
+                st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed."
             except Exception as e:
                 st.error(f"Error: {e}")
+    # Show change and OK button if needed
+    if st.session_state["show_change"]:
+        st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
+        if st.button("OK", key="ok_btn"):
+            st.session_state["cart"] = []
+            st.session_state["show_change"] = False
+            st.session_state["last_change"] = 0
+            st.session_state["cash_received"] = 0
+            st.session_state.pop("success_msg", None)
+            st.cache_data.clear()
+            st.rerun()
     st.markdown('---')
 
 # --- Current Inventory Section ---
