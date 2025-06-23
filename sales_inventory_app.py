@@ -102,6 +102,11 @@ def get_daily_worksheets():
             insert_sheet_index=None,
             new_sheet_name=saleslog_title
         )
+        # Clear all rows except header in the new sales log sheet
+        ws_log = spreadsheet.worksheet(saleslog_title)
+        all_rows = ws_log.get_all_values()
+        if len(all_rows) > 1:
+            ws_log.batch_clear([f"A2:G{len(all_rows)}"])
     # Return worksheet objects
     inventory_ws = spreadsheet.worksheet(inventory_title)
     saleslog_ws = spreadsheet.worksheet(saleslog_title)
