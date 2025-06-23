@@ -121,12 +121,19 @@ if st.button("Add to Order"):
 # Display cart
 if st.session_state["cart"]:
     st.subheader("Current Order")
+    remove_idx = None
     for idx, item in enumerate(st.session_state["cart"], 1):
         if item["product"] == "Pizza":
             desc = f"{item['product']} - {item['pizza_type']} (x{item['qty']})"
         else:
             desc = f"{item['product']} - {item['packaging']} - {item['size']} (x{item['qty']})"
-        st.write(f"{idx}. {desc}")
+        cols = st.columns([6, 1])
+        cols[0].write(f"{idx}. {desc}")
+        if cols[1].button("Remove", key=f"remove_{idx}"):
+            remove_idx = idx - 1
+    if remove_idx is not None:
+        st.session_state["cart"].pop(remove_idx)
+        st.rerun()
     if st.button("Submit Order"):
         try:
             for item in st.session_state["cart"]:
