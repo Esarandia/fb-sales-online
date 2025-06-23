@@ -35,6 +35,8 @@ today_str = now.strftime("%Y-%m-%d")
 sales_records = sales_log.get_all_records()
 def parse_amount(row):
     amt = row.get("Amount", 0)
+    if isinstance(amt, str):
+        amt = amt.replace(",", "").strip()
     try:
         return float(amt) if amt not in (None, "", " ") else 0.0
     except Exception:
@@ -239,6 +241,8 @@ if st.session_state["cart"]:
         st.success(f"Order submitted! Change: ₱{st.session_state['last_change']}")
         if st.button("Complete Order", key="ok_btn"):
             try:
+                now = datetime.now()
+                # Log all items before clearing the cart
                 for item in st.session_state["cart"]:
                     if item["product"] == "Pizza":
                         target_cell = cell_map[item["product"]][item["packaging"]][item["size"]]
@@ -253,7 +257,6 @@ if st.session_state["cart"]:
                     new_value = current_value + item["qty"]
                     sheet.update_acell(target_cell, new_value)
                     # Log each item in the sales log
-                    now = datetime.now()
                     sales_log.append_row([
                         now.strftime("%Y-%m-%d"),
                         now.strftime("%H:%M:%S"),
@@ -263,6 +266,7 @@ if st.session_state["cart"]:
                         item["qty"],
                         item_price * item["qty"]
                     ])
+                # Only clear the cart after all items are logged
                 st.session_state["cart"] = []
                 st.session_state["show_change"] = False
                 st.session_state["last_change"] = 0
