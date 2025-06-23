@@ -152,8 +152,10 @@ amount = qty * price
 st.write(f"**Amount: ₱{amount}**")
 
 # Make Add to Order button green
-if st.button("Add to Order", type="primary"):
-    # Add current item to cart
+add_to_order = st.button("Add to Order")
+
+# Add current item to cart
+if add_to_order:
     item = {
         "product": product,
         "packaging": packaging,
@@ -191,7 +193,8 @@ if st.session_state["cart"]:
         st.session_state["cart"].pop(remove_idx)
         st.rerun()
     # Make Submit Order button green
-    if st.button("Submit Order", type="primary"):
+    submit_order = st.button("Submit Order")
+    if submit_order:
         try:
             for item in st.session_state["cart"]:
                 if item["product"] == "Pizza":
@@ -216,3 +219,13 @@ if st.button("Refresh Inventory"):
 df1, df2 = get_simple_inventory()
 st.dataframe(df1, hide_index=True)
 st.dataframe(df2, hide_index=True)
+
+# Add custom CSS for green buttons
+st.markdown("""
+    <style>
+    .stButton > button {
+        background-color: #21ba45 !important;
+        color: white !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
