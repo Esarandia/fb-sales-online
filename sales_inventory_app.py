@@ -68,7 +68,7 @@ price_map = {
 
 # --- Inventory Display ---
 @st.cache_data(show_spinner=False)
-def get_inventory(sheet):
+def get_inventory():
     inventory_data = []
     # Buko Juice
     for packaging in ["Cup", "Bottle"]:
@@ -108,7 +108,7 @@ def get_inventory(sheet):
     return pd.DataFrame(inventory_data)
 
 st.subheader("Current Inventory")
-st.dataframe(get_inventory(sheet))
+st.dataframe(get_inventory())
 
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
