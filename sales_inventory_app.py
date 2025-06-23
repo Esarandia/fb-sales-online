@@ -223,11 +223,13 @@ st.dataframe(df2, hide_index=True)
 # Add custom CSS for green and red buttons by button label
 st.markdown("""
     <style>
-    button[kind="secondary"]:has(span:contains('Add to Order')), button[kind="secondary"]:has(span:contains('Submit Order')) {
+    /* Green for Add to Order and Submit Order */
+    div.stButton > button:first-child {
         background-color: #21ba45 !important;
         color: white !important;
     }
-    button:has(span:contains('X')) {
+    /* Red for X remove buttons */
+    div.stButton > button[title="Remove item from cart"] {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
