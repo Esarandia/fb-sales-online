@@ -139,8 +139,6 @@ if sales_values:
                         amt_val = 0.0
                     total_sales_today += amt_val
 st.markdown('---')
-st.markdown(f"<h2 style='color:#21ba45;'>₱{total_sales_today:,.2f} <span style='font-size:22px;'>Total Sales Today</span></h2>", unsafe_allow_html=True)
-st.markdown('---')
 
 # --- Streamlit App ---
 
@@ -161,6 +159,7 @@ if "cart" not in st.session_state:
 
 # --- Facebuko Sales Section ---
 st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
+st.markdown(f"<h2 style='color:#21ba45;'>₱{total_sales_today:,.2f} <span style='font-size:22px;'>Total Sales Today</span></h2>", unsafe_allow_html=True)
 st.markdown('---')
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
 if product != "Pizza":
