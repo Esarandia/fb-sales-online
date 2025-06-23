@@ -21,6 +21,50 @@ scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 
+# --- Cell Map Matching Excel Structure ---
+cell_map = {
+    "Buko Juice": {
+        "Cup": {
+            "Small": "C6",
+            "Medium": "D6",
+            "Large": "E6"
+        },
+        "Bottle": {
+            "Small": "F6",
+            "Medium": "G6",
+            "Large": "H6"
+        }
+    },
+    "Buko Shake": {
+        "Cup": {
+            "Small": "I6",
+            "Medium": "J6",
+            "Large": "K6"
+        },
+        "Bottle": {
+            "Small": "L6",
+            "Medium": "M6",
+            "Large": "N6"
+        }
+    },
+    "Pizza": {
+        "Box": {
+            "Supreme": "O6",
+            "Hawaiian": "P6",
+            "Pepperoni": "Q6",
+            "Ham & Cheese": "R6",
+            "Shawarma": "S6"
+        }
+    }
+}
+
+# --- Prices ---
+price_map = {
+    "Cup": {"Small": 65, "Medium": 75, "Large": 95},
+    "Bottle": {"Small": 65, "Medium": 75, "Large": 115},
+    "Box": {"Supreme": 250, "Others": 190}
+}
+
 # --- Daily Sheet Automation ---
 def get_daily_worksheets():
     today_str = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
@@ -65,50 +109,6 @@ def get_daily_worksheets():
 
 # --- Daily Sheet Setup ---
 inventory_ws, saleslog_ws = get_daily_worksheets()
-
-# --- Cell Map Matching Excel Structure ---
-cell_map = {
-    "Buko Juice": {
-        "Cup": {
-            "Small": "C6",
-            "Medium": "D6",
-            "Large": "E6"
-        },
-        "Bottle": {
-            "Small": "F6",
-            "Medium": "G6",
-            "Large": "H6"
-        }
-    },
-    "Buko Shake": {
-        "Cup": {
-            "Small": "I6",
-            "Medium": "J6",
-            "Large": "K6"
-        },
-        "Bottle": {
-            "Small": "L6",
-            "Medium": "M6",
-            "Large": "N6"
-        }
-    },
-    "Pizza": {
-        "Box": {
-            "Supreme": "O6",
-            "Hawaiian": "P6",
-            "Pepperoni": "Q6",
-            "Ham & Cheese": "R6",
-            "Shawarma": "S6"
-        }
-    }
-}
-
-# --- Prices ---
-price_map = {
-    "Cup": {"Small": 65, "Medium": 75, "Large": 95},
-    "Bottle": {"Small": 65, "Medium": 75, "Large": 115},
-    "Box": {"Supreme": 250, "Others": 190}
-}
 
 # --- Simplified Inventory Display ---
 @st.cache_data(show_spinner=False)
