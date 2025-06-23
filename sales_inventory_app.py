@@ -162,6 +162,14 @@ def get_simple_inventory():
 
 # --- Streamlit App ---
 
+# Always initialize session state keys before any logic
+if "cart" not in st.session_state:
+    st.session_state["cart"] = []
+if "show_change" not in st.session_state:
+    st.session_state["show_change"] = False
+if "last_change" not in st.session_state:
+    st.session_state["last_change"] = 0
+
 # Use tabs for navigation
 facebuko_tab, inventory_tab = st.tabs(["Facebuko Sales", "Inventory & Remove Order"])
 
