@@ -69,7 +69,6 @@ price_map = {
 if st.session_state.get("reset_qty", False):
     st.session_state["qty"] = 1
     st.session_state.pop("reset_qty")
-    st.experimental_rerun()
 
 st.title("Sales Entry - Google Sheets")
 
