@@ -223,23 +223,20 @@ st.dataframe(df2, hide_index=True)
 # Add custom CSS for green and red buttons by button order and text
 st.markdown("""
     <style>
-    /* Green for Add to Order and Submit Order (by key) */
-    button#add_to_order_btn, button#submit_order_btn {
+    /* Green for Add to Order and Submit Order (first two buttons in the form) */
+    div.stButton > button {
         background-color: #21ba45 !important;
         color: white !important;
         border: none !important;
         box-shadow: none !important;
     }
-    /* Red for X remove buttons (by key) */
-    button[id^="remove_"] {
+    /* Red for X remove buttons (by button text) */
+    div.stButton > button:has(span:contains('X')) {
         background-color: #db2828 !important;
         color: white !important;
         border: none !important;
         font-weight: bold;
         box-shadow: none !important;
-    }
-    button[id^="remove_"]:hover {
-        background-color: #b71c1c !important;
     }
     </style>
 """, unsafe_allow_html=True)
