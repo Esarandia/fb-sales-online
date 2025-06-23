@@ -211,7 +211,6 @@ if st.session_state["cart"]:
                 change = cash_received - order_total
                 st.session_state["success_msg"] = f"Order submitted! {len(st.session_state['cart'])} items processed. Change: ₱{change}"
                 st.session_state["cart"] = []
-                st.session_state[cash_key] = 0
                 st.cache_data.clear()
                 st.rerun()
             except Exception as e:
