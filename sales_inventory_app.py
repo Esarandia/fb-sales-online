@@ -64,49 +64,6 @@ price_map = {
     "Box": {"Supreme": 250, "Others": 190}
 }
 
-# --- Streamlit App ---
-
-# --- Inventory Display ---
-@st.cache_data(show_spinner=False)
-def get_inventory():
-    inventory_data = []
-    # Buko Juice
-    for packaging in ["Cup", "Bottle"]:
-        for size in ["Small", "Medium", "Large"]:
-            cell = cell_map["Buko Juice"][packaging][size]
-            value = sheet.acell(cell).value
-            value = int(value) if value and str(value).isdigit() else 0
-            inventory_data.append({
-                "Product": "Buko Juice",
-                "Packaging/Flavor": packaging,
-                "Size": size,
-                "Quantity": value
-            })
-    # Buko Shake
-    for packaging in ["Cup", "Bottle"]:
-        for size in ["Small", "Medium", "Large"]:
-            cell = cell_map["Buko Shake"][packaging][size]
-            value = sheet.acell(cell).value
-            value = int(value) if value and str(value).isdigit() else 0
-            inventory_data.append({
-                "Product": "Buko Shake",
-                "Packaging/Flavor": packaging,
-                "Size": size,
-                "Quantity": value
-            })
-    # Pizza
-    for flavor in ["Supreme", "Hawaiian", "Pepperoni", "Ham & Cheese", "Shawarma"]:
-        cell = cell_map["Pizza"]["Box"][flavor]
-        value = sheet.acell(cell).value
-        value = int(value) if value and str(value).isdigit() else 0
-        inventory_data.append({
-            "Product": "Pizza",
-            "Packaging/Flavor": flavor,
-            "Size": "Box",
-            "Quantity": value
-        })
-    return pd.DataFrame(inventory_data)
-
 # --- Simplified Inventory Display ---
 @st.cache_data(show_spinner=False)
 def get_simple_inventory():
@@ -152,12 +109,7 @@ def get_simple_inventory():
     df2 = pd.DataFrame([data[4]], columns=pizza_columns)
     return df1, df2
 
-st.subheader("Current Inventory")
-if st.button("Refresh Inventory"):
-    st.cache_data.clear()
-df1, df2 = get_simple_inventory()
-st.dataframe(df1, hide_index=True)
-st.dataframe(df2, hide_index=True)
+# --- Streamlit App ---
 
 # Handle qty reset before rendering widgets
 if st.session_state.get("reset_qty", False):
@@ -245,3 +197,7 @@ if st.session_state["cart"]:
             st.rerun()
         except Exception as e:
             st.error(f"Error: {e}")
+
+df1, df2 = get_simple_inventory()
+st.dataframe(df1, hide_index=True)
+st.dataframe(df2, hide_index=True)
