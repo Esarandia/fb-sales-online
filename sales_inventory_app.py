@@ -64,6 +64,13 @@ price_map = {
 }
 
 # --- Streamlit App ---
+
+# Handle qty reset before rendering widgets
+if st.session_state.get("reset_qty", False):
+    st.session_state["qty"] = 1
+    st.session_state.pop("reset_qty")
+    st.experimental_rerun()
+
 st.title("Sales Entry - Google Sheets")
 
 product = st.selectbox("Select Product", ["Buko Juice", "Buko Shake", "Pizza"])
@@ -98,7 +105,7 @@ if st.button("Submit"):
         new_value = current_value + qty
         sheet.update_acell(target_cell, new_value)
         st.success(f"Updated {product} - {packaging} - {size} with +{qty} (New total: {new_value})")
-        st.session_state["qty"] = 1
+        st.session_state["reset_qty"] = True
         st.experimental_rerun()
     except Exception as e:
         st.error(f"Error: {e}")
