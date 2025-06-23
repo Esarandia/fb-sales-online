@@ -31,19 +31,32 @@ except Exception:
 # --- Total Sales of the Day ---
 now = datetime.now()
 today_str = now.strftime("%Y-%m-%d")
-# Get all sales for today
-sales_records = sales_log.get_all_records()
-def parse_amount(row):
-    amt = row.get("Amount", 0)
-    if isinstance(amt, str):
-        amt = amt.replace(",", "").strip()
+# Get all values from the sales log worksheet
+sales_values = sales_log.get_all_values()
+if sales_values:
+    header = sales_values[0]
     try:
-        return float(amt) if amt not in (None, "", " ") else 0.0
-    except Exception:
-        return 0.0
-total_sales_today = sum(
-    parse_amount(row) for row in sales_records if row.get("Date") == today_str
-)
+        date_idx = header.index("Date")
+        amount_idx = header.index("Amount")
+    except ValueError:
+        date_idx = None
+        amount_idx = None
+    total_sales_today = 0.0
+    if date_idx is not None and amount_idx is not None:
+        for row in sales_values[1:]:
+            if len(row) > max(date_idx, amount_idx):
+                row_date = row[date_idx]
+                amt = row[amount_idx]
+                if row_date == today_str:
+                    if isinstance(amt, str):
+                        amt = amt.replace(",", "").strip()
+                    try:
+                        amt_val = float(amt) if amt not in (None, "", " ") else 0.0
+                    except Exception:
+                        amt_val = 0.0
+                    total_sales_today += amt_val
+else:
+    total_sales_today = 0.0
 
 # --- Cell Map Matching Excel Structure ---
 cell_map = {
