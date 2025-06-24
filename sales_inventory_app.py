@@ -350,21 +350,43 @@ with remove_tab:
         else:
             remove_size = remove_pizza_type
     remove_qty = st.number_input("Enter Quantity to Remove", min_value=1, step=1, key="remove_qty")
-    if st.button("Remove Order", key="remove_order_btn"):
-        try:
-            if remove_product == "Pizza":
-                target_cell = cell_map[remove_product][remove_packaging][remove_size]
-            else:
-                target_cell = cell_map[remove_product][remove_packaging][remove_size]
-            current_value = inventory_ws.acell(target_cell).value
-            current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
-            new_value = max(0, current_value - remove_qty)
-            inventory_ws.update_acell(target_cell, new_value)
-            st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
-            st.cache_data.clear()
-            st.rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
+    # Add cooldown to prevent rapid repeated calls
+    if "remove_order_cooldown" not in st.session_state:
+        st.session_state["remove_order_cooldown"] = 0
+    import time
+    now = time.time()
+    cooldown_period = 3  # seconds
+    button_disabled = now - st.session_state["remove_order_cooldown"] < cooldown_period
+    if st.button("Remove Order", key="remove_order_btn", disabled=button_disabled):
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                if remove_product == "Pizza":
+                    target_cell = cell_map[remove_product][remove_packaging][remove_size]
+                else:
+                    target_cell = cell_map[remove_product][remove_packaging][remove_size]
+                current_value = inventory_ws.acell(target_cell).value
+                current_value = int(current_value) if current_value and str(current_value).isdigit() else 0
+                new_value = max(0, current_value - remove_qty)
+                inventory_ws.update_acell(target_cell, new_value)
+                st.success(f"Removed {remove_qty} from {remove_product} {remove_packaging} {remove_size if not remove_pizza_type else remove_pizza_type}.")
+                st.session_state["remove_order_cooldown"] = time.time()
+                st.cache_data.clear()
+                st.rerun()
+            except gspread.exceptions.APIError as e:
+                import random
+                wait_time = (2 ** attempt) + random.uniform(0, 1)
+                if attempt < max_retries - 1:
+                    st.warning(f"Google Sheets API rate limit hit. Retrying in {wait_time:.1f} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    st.error("Google Sheets API rate limit reached. Please wait a few seconds and try again.")
+                    break
+            except Exception as e:
+                st.error(f"Error: {e}")
+                break
+    if button_disabled:
+        st.info(f"Please wait {int(cooldown_period - (now - st.session_state['remove_order_cooldown']))}s before removing another order.")
     st.markdown('---')
 
 # --- Place this at the very end of the script ---
