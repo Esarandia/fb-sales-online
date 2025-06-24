@@ -356,7 +356,8 @@ with remove_tab:
     import time
     now = time.time()
     cooldown_period = 3  # seconds
-    button_disabled = now - st.session_state["remove_order_cooldown"] < cooldown_period
+    cooldown_left = cooldown_period - (now - st.session_state["remove_order_cooldown"])
+    button_disabled = cooldown_left > 0
     if st.button("Remove Order", key="remove_order_btn", disabled=button_disabled):
         max_retries = 5
         for attempt in range(max_retries):
@@ -385,8 +386,8 @@ with remove_tab:
             except Exception as e:
                 st.error(f"Error: {e}")
                 break
-    if button_disabled:
-        st.info(f"Please wait {int(cooldown_period - (now - st.session_state['remove_order_cooldown']))}s before removing another order.")
+    if cooldown_left > 0:
+        st.info(f"Please wait {int(cooldown_left)+1}s before removing another order.")
     st.markdown('---')
 
 # --- Place this at the very end of the script ---
