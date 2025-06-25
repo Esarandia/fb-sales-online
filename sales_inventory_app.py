@@ -439,6 +439,17 @@ with stocks_tab:
     )
     if st.button("Save Stocks", key="save_stocks_btn"):
         try:
+            # Connect to Google Sheets and get today's worksheet only when saving
+            creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
+            creds_bytes = base64.b64decode(creds_b64)
+            creds_dict = json.loads(creds_bytes.decode("utf-8"))
+            scope = ["https://www.googleapis.com/auth/spreadsheets"]
+            creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+            client = gspread.authorize(creds)
+            today_str = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
+            inventory_title = f"MighteeMart1_{today_str}"
+            spreadsheet = client.open_by_key(SPREADSHEET_ID)
+            inventory_ws = spreadsheet.worksheet(inventory_title)
             # Fetch all current values in a single batch to minimize API calls
             beg_bal_range = inventory_ws.get(f"G{start_row}:G{start_row+len(stocks)-1}")
             qty_in_range = inventory_ws.get(f"I{start_row}:I{start_row+len(stocks)-1}")
