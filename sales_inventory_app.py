@@ -401,44 +401,26 @@ with stocks_tab:
     table_data = []
     for i, stock in enumerate(stocks):
         row = start_row + i
-        beg_bal_1_cell = f"G{row}"
-        beg_bal_2_cell = f"H{row}"
-        qty_in_1_cell = f"I{row}"
-        qty_in_2_cell = f"J{row}"
-        end_bal_1_cell = f"M{row}"
-        end_bal_2_cell = f"N{row}"
+        beg_bal_cell = f"G{row}"
+        qty_in_cell = f"I{row}"
+        end_bal_cell = f"M{row}"
         try:
-            beg_bal_1 = float(inventory_ws.acell(beg_bal_1_cell).value or 0)
+            beg_bal = float(inventory_ws.acell(beg_bal_cell).value or 0)
         except Exception:
-            beg_bal_1 = 0
+            beg_bal = 0
         try:
-            beg_bal_2 = float(inventory_ws.acell(beg_bal_2_cell).value or 0)
+            qty_in = float(inventory_ws.acell(qty_in_cell).value or 0)
         except Exception:
-            beg_bal_2 = 0
+            qty_in = 0
         try:
-            qty_in_1 = float(inventory_ws.acell(qty_in_1_cell).value or 0)
+            end_bal = float(inventory_ws.acell(end_bal_cell).value or 0)
         except Exception:
-            qty_in_1 = 0
-        try:
-            qty_in_2 = float(inventory_ws.acell(qty_in_2_cell).value or 0)
-        except Exception:
-            qty_in_2 = 0
-        try:
-            end_bal_1 = float(inventory_ws.acell(end_bal_1_cell).value or 0)
-        except Exception:
-            end_bal_1 = 0
-        try:
-            end_bal_2 = float(inventory_ws.acell(end_bal_2_cell).value or 0)
-        except Exception:
-            end_bal_2 = 0
+            end_bal = 0
         table_data.append({
             "Stock": stock,
-            "Beg. Bal 1": beg_bal_1,
-            "Beg. Bal 2": beg_bal_2,
-            "Qty. In 1": qty_in_1,
-            "Qty. In 2": qty_in_2,
-            "Ending Bal 1": end_bal_1,
-            "Ending Bal 2": end_bal_2
+            "Beg. Bal": beg_bal,
+            "Qty. In": qty_in,
+            "Ending Bal": end_bal
         })
     df = pd.DataFrame(table_data)
     edited_df = st.data_editor(
@@ -451,12 +433,9 @@ with stocks_tab:
         try:
             for i, row in edited_df.iterrows():
                 sheet_row = start_row + i
-                inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal 1"])
-                inventory_ws.update_acell(f"H{sheet_row}", row["Beg. Bal 2"])
-                inventory_ws.update_acell(f"I{sheet_row}", row["Qty. In 1"])
-                inventory_ws.update_acell(f"J{sheet_row}", row["Qty. In 2"])
-                inventory_ws.update_acell(f"M{sheet_row}", row["Ending Bal 1"])
-                inventory_ws.update_acell(f"N{sheet_row}", row["Ending Bal 2"])
+                inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal"])
+                inventory_ws.update_acell(f"I{sheet_row}", row["Qty. In"])
+                inventory_ws.update_acell(f"M{sheet_row}", row["Ending Bal"])
             st.success("Stocks updated successfully!")
             st.cache_data.clear()
             st.rerun()
