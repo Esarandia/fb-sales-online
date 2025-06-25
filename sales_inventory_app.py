@@ -439,18 +439,21 @@ with stocks_tab:
     )
     if st.button("Save Stocks", key="save_stocks_btn"):
         try:
+            # Fetch all current values in a single batch to minimize API calls
+            beg_bal_range = inventory_ws.get(f"G{start_row}:G{start_row+len(stocks)-1}")
+            qty_in_range = inventory_ws.get(f"I{start_row}:I{start_row+len(stocks)-1}")
+            end_bal_range = inventory_ws.get(f"M{start_row}:M{start_row+len(stocks)-1}")
             beg_bal_updates = []
             qty_in_updates = []
             end_bal_updates = []
             for i, row in edited_df.iterrows():
-                sheet_row = start_row + i
                 beg_val = row["Beg. Bal"]
                 qty_val = row["Qty. In"]
                 end_val = row["Ending Bal"]
-                # Save as int if not blank, else keep existing value
-                beg_bal_updates.append([int(beg_val) if beg_val not in (None, "") else inventory_ws.acell(f"G{sheet_row}").value])
-                qty_in_updates.append([int(qty_val) if qty_val not in (None, "") else inventory_ws.acell(f"I{sheet_row}").value])
-                end_bal_updates.append([int(end_val) if end_val not in (None, "") else inventory_ws.acell(f"M{sheet_row}").value])
+                # Use cached values if blank, else save as int
+                beg_bal_updates.append([int(beg_val) if beg_val not in (None, "") else (beg_bal_range[i][0] if i < len(beg_bal_range) else None)])
+                qty_in_updates.append([int(qty_val) if qty_val not in (None, "") else (qty_in_range[i][0] if i < len(qty_in_range) else None)])
+                end_bal_updates.append([int(end_val) if end_val not in (None, "") else (end_bal_range[i][0] if i < len(end_bal_range) else None)])
             inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
             inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", qty_in_updates)
             inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", end_bal_updates)
