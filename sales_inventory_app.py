@@ -393,66 +393,63 @@ with remove_tab:
 with stocks_tab:
     st.markdown('<h2 style="color:#a333c8;">📊 Stocks Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
-    # List of stocks and their corresponding rows
     stocks = [
         "Milk", "Sugar", "buko", "S-Bottle", "M-Bottle", "L-Bottle", "S-Cup", "M-Cup", "L-Cup", "Dough", "Pizza sauce", "Ham", "Pepperoni", "Pineapple", "Beep/Bacon", "W Onion", "Bellpepper", "Mushroom", "Hot Sauce", "Catsup", "Beef Shawarma", "Pizza Cheese", "Mozza Cheese", "Pizza Box", "Ice", "Plastic Twine", "Tissue", "Spoon", "Straw", "Sando bag", "Carrier bag", "Siomai"
     ]
     start_row = 16
-    end_row = 48
     # Prepare table data
     table_data = []
     for i, stock in enumerate(stocks):
         row = start_row + i
-        # Beg. Bal: G and H columns
         beg_bal_1_cell = f"G{row}"
         beg_bal_2_cell = f"H{row}"
-        # Qty. In: I and J columns
         qty_in_1_cell = f"I{row}"
         qty_in_2_cell = f"J{row}"
-        # Ending Bal: M and N columns
         end_bal_1_cell = f"M{row}"
         end_bal_2_cell = f"N{row}"
-        # Read current values from sheet
         try:
-            beg_bal_1 = inventory_ws.acell(beg_bal_1_cell).value or ""
+            beg_bal_1 = float(inventory_ws.acell(beg_bal_1_cell).value or 0)
         except Exception:
-            beg_bal_1 = ""
+            beg_bal_1 = 0
         try:
-            beg_bal_2 = inventory_ws.acell(beg_bal_2_cell).value or ""
+            beg_bal_2 = float(inventory_ws.acell(beg_bal_2_cell).value or 0)
         except Exception:
-            beg_bal_2 = ""
+            beg_bal_2 = 0
         try:
-            qty_in_1 = inventory_ws.acell(qty_in_1_cell).value or ""
+            qty_in_1 = float(inventory_ws.acell(qty_in_1_cell).value or 0)
         except Exception:
-            qty_in_1 = ""
+            qty_in_1 = 0
         try:
-            qty_in_2 = inventory_ws.acell(qty_in_2_cell).value or ""
+            qty_in_2 = float(inventory_ws.acell(qty_in_2_cell).value or 0)
         except Exception:
-            qty_in_2 = ""
+            qty_in_2 = 0
         try:
-            end_bal_1 = inventory_ws.acell(end_bal_1_cell).value or ""
+            end_bal_1 = float(inventory_ws.acell(end_bal_1_cell).value or 0)
         except Exception:
-            end_bal_1 = ""
+            end_bal_1 = 0
         try:
-            end_bal_2 = inventory_ws.acell(end_bal_2_cell).value or ""
+            end_bal_2 = float(inventory_ws.acell(end_bal_2_cell).value or 0)
         except Exception:
-            end_bal_2 = ""
-        # Add to table data
+            end_bal_2 = 0
         table_data.append({
             "Stock": stock,
-            "Beg. Bal 1": st.number_input(f"Beg. Bal 1 {stock}", value=float(beg_bal_1) if str(beg_bal_1).replace('.','',1).isdigit() else 0, key=f"beg1_{stock}"),
-            "Beg. Bal 2": st.number_input(f"Beg. Bal 2 {stock}", value=float(beg_bal_2) if str(beg_bal_2).replace('.','',1).isdigit() else 0, key=f"beg2_{stock}"),
-            "Qty. In 1": st.number_input(f"Qty. In 1 {stock}", value=float(qty_in_1) if str(qty_in_1).replace('.','',1).isdigit() else 0, key=f"qtyin1_{stock}"),
-            "Qty. In 2": st.number_input(f"Qty. In 2 {stock}", value=float(qty_in_2) if str(qty_in_2).replace('.','',1).isdigit() else 0, key=f"qtyin2_{stock}"),
-            "Ending Bal 1": st.number_input(f"Ending Bal 1 {stock}", value=float(end_bal_1) if str(end_bal_1).replace('.','',1).isdigit() else 0, key=f"end1_{stock}"),
-            "Ending Bal 2": st.number_input(f"Ending Bal 2 {stock}", value=float(end_bal_2) if str(end_bal_2).replace('.','',1).isdigit() else 0, key=f"end2_{stock}")
+            "Beg. Bal 1": beg_bal_1,
+            "Beg. Bal 2": beg_bal_2,
+            "Qty. In 1": qty_in_1,
+            "Qty. In 2": qty_in_2,
+            "Ending Bal 1": end_bal_1,
+            "Ending Bal 2": end_bal_2
         })
-    # Display as DataFrame (read-only for Stock column)
-    display_df = pd.DataFrame(table_data)
-    st.dataframe(display_df, hide_index=True)
+    df = pd.DataFrame(table_data)
+    edited_df = st.data_editor(
+        df,
+        column_config={"Stock": st.column_config.TextColumn(disabled=True)},
+        hide_index=True,
+        num_rows="fixed"
+    )
     if st.button("Save Stocks", key="save_stocks_btn"):
         try:
-            for i, row in enumerate(table_data):
+            for i, row in edited_df.iterrows():
                 sheet_row = start_row + i
                 inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal 1"])
                 inventory_ws.update_acell(f"H{sheet_row}", row["Beg. Bal 2"])
