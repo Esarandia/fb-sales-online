@@ -406,19 +406,19 @@ with stocks_tab:
         end_bal_cell = f"M{row}"
         try:
             beg_bal = inventory_ws.acell(beg_bal_cell).value
-            beg_bal = float(beg_bal) if beg_bal not in (None, "") else ""
+            beg_bal = float(beg_bal) if beg_bal not in (None, "") else None
         except Exception:
-            beg_bal = ""
+            beg_bal = None
         try:
             qty_in = inventory_ws.acell(qty_in_cell).value
-            qty_in = float(qty_in) if qty_in not in (None, "") else ""
+            qty_in = float(qty_in) if qty_in not in (None, "") else None
         except Exception:
-            qty_in = ""
+            qty_in = None
         try:
             end_bal = inventory_ws.acell(end_bal_cell).value
-            end_bal = float(end_bal) if end_bal not in (None, "") else ""
+            end_bal = float(end_bal) if end_bal not in (None, "") else None
         except Exception:
-            end_bal = ""
+            end_bal = None
         table_data.append({
             "Stock": stock,
             "Beg. Bal": beg_bal,
@@ -428,7 +428,12 @@ with stocks_tab:
     df = pd.DataFrame(table_data)
     edited_df = st.data_editor(
         df,
-        column_config={"Stock": st.column_config.TextColumn(disabled=True)},
+        column_config={
+            "Stock": st.column_config.TextColumn(disabled=True),
+            "Beg. Bal": st.column_config.NumberColumn(required=False),
+            "Qty. In": st.column_config.NumberColumn(required=False),
+            "Ending Bal": st.column_config.NumberColumn(required=False)
+        },
         hide_index=True,
         num_rows="fixed"
     )
@@ -439,14 +444,13 @@ with stocks_tab:
             end_bal_updates = []
             for i, row in edited_df.iterrows():
                 sheet_row = start_row + i
-                # Only update if not blank
-                beg_val = str(row["Beg. Bal"]).strip()
-                qty_val = str(row["Qty. In"]).strip()
-                end_val = str(row["Ending Bal"]).strip()
-                beg_bal_updates.append([beg_val if beg_val != "" else inventory_ws.acell(f"G{sheet_row}").value])
-                qty_in_updates.append([qty_val if qty_val != "" else inventory_ws.acell(f"I{sheet_row}").value])
-                end_bal_updates.append([end_val if end_val != "" else inventory_ws.acell(f"M{sheet_row}").value])
-            # Batch update columns
+                beg_val = row["Beg. Bal"]
+                qty_val = row["Qty. In"]
+                end_val = row["Ending Bal"]
+                # Save as int if not blank, else keep existing value
+                beg_bal_updates.append([int(beg_val) if beg_val not in (None, "") else inventory_ws.acell(f"G{sheet_row}").value])
+                qty_in_updates.append([int(qty_val) if qty_val not in (None, "") else inventory_ws.acell(f"I{sheet_row}").value])
+                end_bal_updates.append([int(end_val) if end_val not in (None, "") else inventory_ws.acell(f"M{sheet_row}").value])
             inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
             inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", qty_in_updates)
             inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", end_bal_updates)
