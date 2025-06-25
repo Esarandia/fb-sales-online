@@ -396,7 +396,7 @@ with stocks_tab:
     stocks = [
         "Milk", "Sugar", "buko", "S-Bottle", "M-Bottle", "L-Bottle", "S-Cup", "M-Cup", "L-Cup", "Dough", "Pizza sauce", "Ham", "Pepperoni", "Pineapple", "Beep/Bacon", "W Onion", "Bellpepper", "Mushroom", "Hot Sauce", "Catsup", "Beef Shawarma", "Pizza Cheese", "Mozza Cheese", "Pizza Box", "Ice", "Plastic Twine", "Tissue", "Spoon", "Straw", "Sando bag", "Carrier bag", "Siomai"
     ]
-    start_row = 16
+    start_row = 17  # Start one row below the title
     # Prepare table data
     table_data = []
     for i, stock in enumerate(stocks):
@@ -405,17 +405,20 @@ with stocks_tab:
         qty_in_cell = f"I{row}"
         end_bal_cell = f"M{row}"
         try:
-            beg_bal = float(inventory_ws.acell(beg_bal_cell).value or 0)
+            beg_bal = inventory_ws.acell(beg_bal_cell).value
+            beg_bal = float(beg_bal) if beg_bal not in (None, "") else ""
         except Exception:
-            beg_bal = 0
+            beg_bal = ""
         try:
-            qty_in = float(inventory_ws.acell(qty_in_cell).value or 0)
+            qty_in = inventory_ws.acell(qty_in_cell).value
+            qty_in = float(qty_in) if qty_in not in (None, "") else ""
         except Exception:
-            qty_in = 0
+            qty_in = ""
         try:
-            end_bal = float(inventory_ws.acell(end_bal_cell).value or 0)
+            end_bal = inventory_ws.acell(end_bal_cell).value
+            end_bal = float(end_bal) if end_bal not in (None, "") else ""
         except Exception:
-            end_bal = 0
+            end_bal = ""
         table_data.append({
             "Stock": stock,
             "Beg. Bal": beg_bal,
@@ -433,9 +436,12 @@ with stocks_tab:
         try:
             for i, row in edited_df.iterrows():
                 sheet_row = start_row + i
-                inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal"])
-                inventory_ws.update_acell(f"I{sheet_row}", row["Qty. In"])
-                inventory_ws.update_acell(f"M{sheet_row}", row["Ending Bal"])
+                if str(row["Beg. Bal"]).strip() != "":
+                    inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal"])
+                if str(row["Qty. In"]).strip() != "":
+                    inventory_ws.update_acell(f"I{sheet_row}", row["Qty. In"])
+                if str(row["Ending Bal"]).strip() != "":
+                    inventory_ws.update_acell(f"M{sheet_row}", row["Ending Bal"])
             st.success("Stocks updated successfully!")
             st.cache_data.clear()
             st.rerun()
