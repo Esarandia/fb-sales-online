@@ -434,14 +434,22 @@ with stocks_tab:
     )
     if st.button("Save Stocks", key="save_stocks_btn"):
         try:
+            beg_bal_updates = []
+            qty_in_updates = []
+            end_bal_updates = []
             for i, row in edited_df.iterrows():
                 sheet_row = start_row + i
-                if str(row["Beg. Bal"]).strip() != "":
-                    inventory_ws.update_acell(f"G{sheet_row}", row["Beg. Bal"])
-                if str(row["Qty. In"]).strip() != "":
-                    inventory_ws.update_acell(f"I{sheet_row}", row["Qty. In"])
-                if str(row["Ending Bal"]).strip() != "":
-                    inventory_ws.update_acell(f"M{sheet_row}", row["Ending Bal"])
+                # Only update if not blank
+                beg_val = str(row["Beg. Bal"]).strip()
+                qty_val = str(row["Qty. In"]).strip()
+                end_val = str(row["Ending Bal"]).strip()
+                beg_bal_updates.append([beg_val if beg_val != "" else inventory_ws.acell(f"G{sheet_row}").value])
+                qty_in_updates.append([qty_val if qty_val != "" else inventory_ws.acell(f"I{sheet_row}").value])
+                end_bal_updates.append([end_val if end_val != "" else inventory_ws.acell(f"M{sheet_row}").value])
+            # Batch update columns
+            inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
+            inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", qty_in_updates)
+            inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", end_bal_updates)
             st.success("Stocks updated successfully!")
             st.cache_data.clear()
             st.rerun()
