@@ -167,10 +167,10 @@ if "show_change" not in st.session_state:
 if "last_change" not in st.session_state:
     st.session_state["last_change"] = 0
 
-# Use tabs for navigation
-selected_tab = st.selectbox("Select Tab", ["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"])
+# Use tabs for navigation (restore tab design)
+tabs = st.tabs(["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"])
 
-if selected_tab == "Facebuko Sales":
+with tabs[0]:
     inventory_ws, saleslog_ws = get_daily_worksheets()
     st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
     # --- Total Sales (from Current Inventory Table) ---
@@ -319,7 +319,7 @@ if selected_tab == "Facebuko Sales":
                     st.error(f"Error: {e}")
         st.markdown('---')
 
-elif selected_tab == "Current Inventory":
+with tabs[1]:
     inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
@@ -330,7 +330,7 @@ elif selected_tab == "Current Inventory":
     st.dataframe(df2, hide_index=True)
     st.markdown('---')
 
-elif selected_tab == "Remove Order":
+with tabs[2]:
     inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
     remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
@@ -390,7 +390,7 @@ elif selected_tab == "Remove Order":
         st.info(f"Please wait {int(cooldown_left)+1}s before removing another order.")
     st.markdown('---')
 
-elif selected_tab == "Stocks Inventory":
+with tabs[3]:
     st.markdown('<h2 style="color:#a333c8;">📊 Stocks Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
     stocks = [
