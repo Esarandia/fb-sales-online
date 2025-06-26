@@ -168,7 +168,7 @@ if "last_change" not in st.session_state:
     st.session_state["last_change"] = 0
 
 # Use tabs for navigation
-selected_tab = st.selectbox("Select Tab", ["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"])
+selected_tab = st.selectbox("Select Tab", ["Facebuko Sales", "Sales Summary", "Remove Order", "Stocks Inventory"])
 
 if selected_tab == "Facebuko Sales":
     inventory_ws, saleslog_ws = get_daily_worksheets()
@@ -319,9 +319,9 @@ if selected_tab == "Facebuko Sales":
                     st.error(f"Error: {e}")
         st.markdown('---')
 
-elif selected_tab == "Current Inventory":
+elif selected_tab == "Sales Summary":
     inventory_ws, _ = get_daily_worksheets()
-    st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 style="color:#f2711c;">📦 Sales Summary</h2>', unsafe_allow_html=True)
     st.markdown('---')
     if st.button("Refresh Inventory"):
         st.cache_data.clear()
