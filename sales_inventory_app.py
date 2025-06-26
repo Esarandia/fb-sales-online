@@ -397,35 +397,47 @@ with stocks_tab:
         "Milk", "Sugar", "buko", "S-Bottle", "M-Bottle", "L-Bottle", "S-Cup", "M-Cup", "L-Cup", "Dough", "Pizza sauce", "Ham", "Pepperoni", "Pineapple", "Beep/Bacon", "W Onion", "Bellpepper", "Mushroom", "Hot Sauce", "Catsup", "Beef Shawarma", "Pizza Cheese", "Mozza Cheese", "Pizza Box", "Ice", "Plastic Twine", "Tissue", "Spoon", "Straw", "Sando bag", "Carrier bag", "Siomai"
     ]
     start_row = 17  # Start one row below the title
-    # Prepare table data
-    table_data = []
-    for i, stock in enumerate(stocks):
-        row = start_row + i
-        beg_bal_cell = f"G{row}"
-        qty_in_cell = f"I{row}"
-        end_bal_cell = f"M{row}"
-        try:
-            beg_bal = inventory_ws.acell(beg_bal_cell).value
+
+    def fetch_stocks_table():
+        # Connect and fetch all stocks data from Google Sheets
+        creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
+        creds_bytes = base64.b64decode(creds_b64)
+        creds_dict = json.loads(creds_bytes.decode("utf-8"))
+        scope = ["https://www.googleapis.com/auth/spreadsheets"]
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        client = gspread.authorize(creds)
+        today_str = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
+        inventory_title = f"MighteeMart1_{today_str}"
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        inventory_ws = spreadsheet.worksheet(inventory_title)
+        beg_bal_range = inventory_ws.get(f"G{start_row}:G{start_row+len(stocks)-1}")
+        qty_in_range = inventory_ws.get(f"I{start_row}:I{start_row+len(stocks)-1}")
+        end_bal_range = inventory_ws.get(f"M{start_row}:M{start_row+len(stocks)-1}")
+        table_data = []
+        for i, stock in enumerate(stocks):
+            beg_bal = beg_bal_range[i][0] if i < len(beg_bal_range) and beg_bal_range[i] else None
+            qty_in = qty_in_range[i][0] if i < len(qty_in_range) and qty_in_range[i] else None
+            end_bal = end_bal_range[i][0] if i < len(end_bal_range) and end_bal_range[i] else None
             beg_bal = float(beg_bal) if beg_bal not in (None, "") else None
-        except Exception:
-            beg_bal = None
-        try:
-            qty_in = inventory_ws.acell(qty_in_cell).value
             qty_in = float(qty_in) if qty_in not in (None, "") else None
-        except Exception:
-            qty_in = None
-        try:
-            end_bal = inventory_ws.acell(end_bal_cell).value
             end_bal = float(end_bal) if end_bal not in (None, "") else None
-        except Exception:
-            end_bal = None
-        table_data.append({
-            "Stock": stock,
-            "Beg. Bal": beg_bal,
-            "Qty. In": qty_in,
-            "Ending Bal": end_bal
-        })
-    df = pd.DataFrame(table_data)
+            table_data.append({
+                "Stock": stock,
+                "Beg. Bal": beg_bal,
+                "Qty. In": qty_in,
+                "Ending Bal": end_bal
+            })
+        return table_data
+
+    # Use session state to cache table data
+    if "stocks_table_data" not in st.session_state:
+        st.session_state["stocks_table_data"] = fetch_stocks_table()
+
+    if st.button("Refresh Inventory", key="refresh_stocks_btn"):
+        st.session_state["stocks_table_data"] = fetch_stocks_table()
+        st.success("Stocks inventory refreshed from Google Sheets.")
+
+    df = pd.DataFrame(st.session_state["stocks_table_data"])
     edited_df = st.data_editor(
         df,
         column_config={
@@ -461,13 +473,14 @@ with stocks_tab:
                 beg_val = row["Beg. Bal"]
                 qty_val = row["Qty. In"]
                 end_val = row["Ending Bal"]
-                # Use cached values if blank, else save as int
                 beg_bal_updates.append([int(beg_val) if beg_val not in (None, "") else (beg_bal_range[i][0] if i < len(beg_bal_range) else None)])
                 qty_in_updates.append([int(qty_val) if qty_val not in (None, "") else (qty_in_range[i][0] if i < len(qty_in_range) else None)])
                 end_bal_updates.append([int(end_val) if end_val not in (None, "") else (end_bal_range[i][0] if i < len(end_bal_range) else None)])
             inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
             inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", qty_in_updates)
             inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", end_bal_updates)
+            # Update session state cache after saving
+            st.session_state["stocks_table_data"] = fetch_stocks_table()
             st.success("Stocks updated successfully!")
             st.cache_data.clear()
             st.rerun()
