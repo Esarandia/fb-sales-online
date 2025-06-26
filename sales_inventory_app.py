@@ -500,6 +500,28 @@ elif selected_tab == "Stocks Inventory":
             st.rerun()
         except Exception as e:
             st.error(f"Error updating stocks: {e}")
+    if st.button("Clear All", key="clear_stocks_btn"):
+        try:
+            creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
+            creds_bytes = base64.b64decode(creds_b64)
+            creds_dict = json.loads(creds_bytes.decode("utf-8"))
+            scope = ["https://www.googleapis.com/auth/spreadsheets"]
+            creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+            client = gspread.authorize(creds)
+            today_str = datetime.now(pytz.timezone("Asia/Manila")).strftime("%Y-%m-%d")
+            inventory_title = f"MighteeMart1_{today_str}"
+            spreadsheet = client.open_by_key(SPREADSHEET_ID)
+            inventory_ws = spreadsheet.worksheet(inventory_title)
+            blank_values = [[""] for _ in stocks]
+            inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", blank_values)
+            inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", blank_values)
+            inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", blank_values)
+            st.session_state["stocks_table_data"] = fetch_stocks_table()
+            st.success("All stocks fields cleared!")
+            st.cache_data.clear()
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error clearing stocks: {e}")
     st.markdown('---')
 
 # --- Place this at the very end of the script ---
