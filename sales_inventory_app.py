@@ -474,17 +474,20 @@ with stocks_tab:
                 beg_val = row["Beg. Bal"]
                 qty_val = row["Qty. In"]
                 end_val = row["Ending Bal"]
-                # Use pd.isna to check for NaN, treat as blank
+                # Defensive: check if the row exists and has a value, else use None
+                beg_old = beg_bal_range[i][0] if i < len(beg_bal_range) and beg_bal_range[i] and len(beg_bal_range[i]) > 0 else None
+                qty_old = qty_in_range[i][0] if i < len(qty_in_range) and qty_in_range[i] and len(qty_in_range[i]) > 0 else None
+                end_old = end_bal_range[i][0] if i < len(end_bal_range) and end_bal_range[i] and len(end_bal_range[i]) > 0 else None
                 if pd.isna(beg_val) or beg_val == "":
-                    beg_bal_updates.append([beg_bal_range[i][0] if i < len(beg_bal_range) else None])
+                    beg_bal_updates.append([beg_old])
                 else:
                     beg_bal_updates.append([int(beg_val)])
                 if pd.isna(qty_val) or qty_val == "":
-                    qty_in_updates.append([qty_in_range[i][0] if i < len(qty_in_range) else None])
+                    qty_in_updates.append([qty_old])
                 else:
                     qty_in_updates.append([int(qty_val)])
                 if pd.isna(end_val) or end_val == "":
-                    end_bal_updates.append([end_bal_range[i][0] if i < len(end_bal_range) else None])
+                    end_bal_updates.append([end_old])
                 else:
                     end_bal_updates.append([int(end_val)])
             inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
