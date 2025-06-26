@@ -451,6 +451,7 @@ with stocks_tab:
     )
     if st.button("Save Stocks", key="save_stocks_btn"):
         try:
+            import pandas as pd  # Ensure pd is available in this scope
             # Connect to Google Sheets and get today's worksheet only when saving
             creds_b64 = os.environ["GOOGLE_SERVICE_ACCOUNT_B64"]
             creds_bytes = base64.b64decode(creds_b64)
@@ -473,9 +474,19 @@ with stocks_tab:
                 beg_val = row["Beg. Bal"]
                 qty_val = row["Qty. In"]
                 end_val = row["Ending Bal"]
-                beg_bal_updates.append([int(beg_val) if beg_val not in (None, "") else (beg_bal_range[i][0] if i < len(beg_bal_range) else None)])
-                qty_in_updates.append([int(qty_val) if qty_val not in (None, "") else (qty_in_range[i][0] if i < len(qty_in_range) else None)])
-                end_bal_updates.append([int(end_val) if end_val not in (None, "") else (end_bal_range[i][0] if i < len(end_bal_range) else None)])
+                # Use pd.isna to check for NaN, treat as blank
+                if pd.isna(beg_val) or beg_val == "":
+                    beg_bal_updates.append([beg_bal_range[i][0] if i < len(beg_bal_range) else None])
+                else:
+                    beg_bal_updates.append([int(beg_val)])
+                if pd.isna(qty_val) or qty_val == "":
+                    qty_in_updates.append([qty_in_range[i][0] if i < len(qty_in_range) else None])
+                else:
+                    qty_in_updates.append([int(qty_val)])
+                if pd.isna(end_val) or end_val == "":
+                    end_bal_updates.append([end_bal_range[i][0] if i < len(end_bal_range) else None])
+                else:
+                    end_bal_updates.append([int(end_val)])
             inventory_ws.update(f"G{start_row}:G{start_row+len(stocks)-1}", beg_bal_updates)
             inventory_ws.update(f"I{start_row}:I{start_row+len(stocks)-1}", qty_in_updates)
             inventory_ws.update(f"M{start_row}:M{start_row+len(stocks)-1}", end_bal_updates)
