@@ -167,19 +167,10 @@ if "show_change" not in st.session_state:
 if "last_change" not in st.session_state:
     st.session_state["last_change"] = 0
 
-# Use tabs for navigation (restore tab design, no radio workaround)
-tab_labels = ["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"]
-tabs = st.tabs(tab_labels)
+# Use tabs for navigation
+selected_tab = st.selectbox("Select Tab", ["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"])
 
-# Track the active tab index in session state to avoid unnecessary API calls
-if "active_tab" not in st.session_state:
-    st.session_state["active_tab"] = 0
-
-# Streamlit does not provide a direct way to get the active tab, so we use a workaround:
-# Place a unique key in each tab and update session state when a widget is interacted with
-with tabs[0]:
-    st.session_state["active_tab"] = 0
-    # Only call Google Sheets API if this tab is active
+if selected_tab == "Facebuko Sales":
     inventory_ws, saleslog_ws = get_daily_worksheets()
     st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
     # --- Total Sales (from Current Inventory Table) ---
@@ -326,11 +317,9 @@ with tabs[0]:
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error: {e}")
-    st.markdown('---')
+        st.markdown('---')
 
-with tabs[1]:
-    st.session_state["active_tab"] = 1
-    # Only call Google Sheets API if this tab is active
+elif selected_tab == "Current Inventory":
     inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
@@ -339,10 +328,9 @@ with tabs[1]:
     df1, df2 = get_simple_inventory()
     st.dataframe(df1, hide_index=True)
     st.dataframe(df2, hide_index=True)
+    st.markdown('---')
 
-with tabs[2]:
-    st.session_state["active_tab"] = 2
-    # Only call Google Sheets API if this tab is active
+elif selected_tab == "Remove Order":
     inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
     remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
@@ -400,10 +388,9 @@ with tabs[2]:
                 break
     if cooldown_left > 0:
         st.info(f"Please wait {int(cooldown_left)+1}s before removing another order.")
+    st.markdown('---')
 
-with tabs[3]:
-    st.session_state["active_tab"] = 3
-    # No global Google Sheets API call here; only inside fetch_stocks_table() and on save/refresh
+elif selected_tab == "Stocks Inventory":
     st.markdown('<h2 style="color:#a333c8;">📊 Stocks Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
     stocks = [
@@ -513,6 +500,7 @@ with tabs[3]:
             st.rerun()
         except Exception as e:
             st.error(f"Error updating stocks: {e}")
+    st.markdown('---')
 
 # --- Place this at the very end of the script ---
 # st.subheader("Current Inventory")
