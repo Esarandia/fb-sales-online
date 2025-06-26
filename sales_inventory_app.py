@@ -112,9 +112,6 @@ def get_daily_worksheets():
     saleslog_ws = spreadsheet.worksheet(saleslog_title)
     return inventory_ws, saleslog_ws
 
-# --- Daily Sheet Setup ---
-inventory_ws, saleslog_ws = get_daily_worksheets()
-
 # --- Simplified Inventory Display ---
 @st.cache_data(show_spinner=False)
 def get_simple_inventory():
@@ -174,6 +171,7 @@ if "last_change" not in st.session_state:
 facebuko_tab, inventory_tab, remove_tab, stocks_tab = st.tabs(["Facebuko Sales", "Current Inventory", "Remove Order", "Stocks Inventory"])
 
 with facebuko_tab:
+    inventory_ws, saleslog_ws = get_daily_worksheets()
     st.markdown('<h2 style="color:#21ba45;">🛒 Facebuko Sales</h2>', unsafe_allow_html=True)
     # --- Total Sales (from Current Inventory Table) ---
     df1, df2 = get_simple_inventory()
@@ -322,6 +320,7 @@ with facebuko_tab:
         st.markdown('---')
 
 with inventory_tab:
+    inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#f2711c;">📦 Current Inventory</h2>', unsafe_allow_html=True)
     st.markdown('---')
     if st.button("Refresh Inventory"):
@@ -332,6 +331,7 @@ with inventory_tab:
     st.markdown('---')
 
 with remove_tab:
+    inventory_ws, _ = get_daily_worksheets()
     st.markdown('<h2 style="color:#db2828;">➖ Remove Order</h2>', unsafe_allow_html=True)
     remove_product = st.selectbox("Select Product to Remove", ["Buko Juice", "Buko Shake", "Pizza"], key="remove_product")
     if remove_product != "Pizza":
